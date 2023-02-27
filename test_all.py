@@ -52,7 +52,7 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION_AUGMENTED/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_AUGMENTED_Epoch_449.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
-    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_MSSEG.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_Epoch_999.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
 
@@ -82,14 +82,14 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_ISLES_BEST_BRATS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_ISLES_Epoch_449.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
 
-    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_BEST_ATLAS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
-    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_BEST_BRATS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
-    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_Epoch_499.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_BEST_ATLAS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_BEST_BRATS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_Epoch_499.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
 
 
     ]
 
-    device_id = 1
+    device_id = 0
     cuda_id = "cuda:" + str(device_id)
     device = torch.device(cuda_id)
     torch.cuda.set_device(cuda_id)
@@ -99,11 +99,11 @@ if __name__=="__main__":
 
     datasets = ["BRATS", "ATLAS", "MSSEG", "ISLES2015"]
     #REMOVE THIS
-    # datasets = ["ISLES2015"]
+    datasets = ["ISLES2015"]
 
     dataset_modalities = [[0,1,2,3],[0],[0,1,2,3,4],[0,1,2,3]]
     # REMOVE THIS
-    # dataset_modalities = [[0,1,2,3]]
+    dataset_modalities = [[0,1,2,3]]
 
     for net in nets:
         print("*************** TESTING NET " + net.file_path + " **************")
@@ -114,7 +114,7 @@ if __name__=="__main__":
             dataloader = test.create_dataset(dataset)
             modalities = test.create_modality_combinations(dataset_modalities[i])
             # REMOVE THIS
-            # modalities = [(0,1,2,3)]
+            modalities = [(0,1,2,3)]
             for combination in modalities:
                 # print(combination)
                 test.test(model,

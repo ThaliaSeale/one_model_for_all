@@ -23,12 +23,12 @@ import numpy as np
 import random
 
 import sys
-from UNetv2 import UNetv2
+from Nets.UNetv2 import UNetv2
 from monai.networks.nets.unet import UNet
 # from orig_UNet_but_with_avg_pool_res_unit import UNet_avg_pool
 from HEMISv2 import HEMISv2
 from create_modality import create_modality
-from multi_scale_fusion_net import MSFN
+from Nets.multi_scale_fusion_net import MSFN
 
 def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list):
 

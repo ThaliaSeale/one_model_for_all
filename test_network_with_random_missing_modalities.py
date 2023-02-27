@@ -14,12 +14,13 @@ from torchmetrics.classification import Recall, JaccardIndex
 import random
 from itertools import combinations
 import sys
-from HEMIS_Nets import hemis_style_net as hemNet
-from HEMIS_Nets import hemis_style_res_units_after_fusion as hemNet2
+from HEMIS_Nets_Legacy import hemis_style_net as hemNet
+from HEMIS_Nets_Legacy import hemis_style_res_units_after_fusion as hemNet2
 from HEMISv2 import HEMISv2 
-from UNetv2 import UNetv2
-from multi_scale_fusion_net import MSFN
+from Nets.UNetv2 import UNetv2
+from Nets.multi_scale_fusion_net import MSFN
 import nibabel as nib
+import epistemic_unc
 
 
 from glob import glob
@@ -197,16 +198,23 @@ def test(model, val_loader, modalities, device, channel_map, modalities_present_
       sw_batch_size = 1
 
       if net_type == "UNet":
-        val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
+        ep = epistemic_unc.Epistemic()
+        mean_out, var_mask = ep.calculate_unc(model, val_images)
+        val_outputs = mean_out
+        # val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
       elif net_type in ("HEMIS_v1", "HEMIS_v2","HEMIS_v3"):
         # val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, hemis_net.combined_model)
         pass
       elif net_type == "HEM mean" or net_type == "HEM channel attention" or net_type == "HEM spatial attention":
         val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
       else:
-        val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
+        ep = epistemic_unc.Epistemic()
+        mean_out, var_mask = ep.calculate_unc(model, val_images)
+        val_outputs = mean_out
+        # val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
       
       val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+      val_outputs = torch.mul(val_outputs[0],var_mask)
 
       # manual DWI for MSFN BRATS ATLAS MSSEG - ISLES val data
       # if modalities == (0,1,2,3):
@@ -331,12 +339,12 @@ def test(model, val_loader, modalities, device, channel_map, modalities_present_
 
     # aggregate the final mean dice result
     metric = dice_metric.aggregate().item()
-    # print("DICE Metric:")
+    print("DICE Metric:")
     print(metric)
-    # print("Averge Recall:")
-    # print(recall_total/steps)
-    # print("Average Jaccard:")
-    # print(jaccard_total/steps)
+    print("Averge Recall:")
+    print(recall_total/steps)
+    print("Average Jaccard:")
+    print(jaccard_total/steps)
 
     # reset the status for next validation round
     dice_metric.reset()

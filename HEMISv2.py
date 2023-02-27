@@ -2,7 +2,7 @@ import monai
 # from monai.networks.blocks import ResidualUnit, Convolution
 import torch
 import torch.nn as nn
-from UNetv2 import UNetv2
+from Nets.UNetv2 import UNetv2
 # import UNetv2
 from updated_res_units import ResidualUnit, Convolution
 # import monai.networks.nets.unet as UNet
