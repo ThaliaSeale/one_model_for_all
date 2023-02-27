@@ -68525,3 +68525,6 @@ epoch 148/1000
 459/459, train_loss: 0.0998
 epoch 148 average loss: 0.3557
 current epoch: 148 current mean dice BRATS: 0.8880 best mean dice BRATS: 0.8990 at epoch 136
+current epoch: 148 current mean dice ATLAS: 0.4604 best mean dice ATLAS: 0.4958 at epoch 136
+----------
+epoch 149/1000
