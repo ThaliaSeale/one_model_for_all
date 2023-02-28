@@ -1,0 +1,595 @@
+nohup: ignoring input
+MONAI version: 1.1.dev2241
+Numpy version: 1.23.3
+Pytorch version: 1.14.0.dev20221012+cu117
+MONAI flags: HAS_EXT = False, USE_COMPILED = False, USE_META_DICT = False
+MONAI rev id: 3aec844d8fb56a9a9be2c945ae581e59edd0c8f7
+MONAI __file__: /home/sedm6251/.local/lib/python3.8/site-packages/monai/__init__.py
+
+Optional dependencies:
+Pytorch Ignite version: NOT INSTALLED or UNKNOWN VERSION.
+Nibabel version: 4.0.2
+scikit-image version: NOT INSTALLED or UNKNOWN VERSION.
+Pillow version: 7.0.0
+Tensorboard version: 2.10.1
+gdown version: 4.5.1
+TorchVision version: 0.15.0.dev20221012+cu117
+tqdm version: 4.64.1
+lmdb version: NOT INSTALLED or UNKNOWN VERSION.
+psutil version: 5.9.2
+pandas version: 1.5.1
+einops version: NOT INSTALLED or UNKNOWN VERSION.
+transformers version: NOT INSTALLED or UNKNOWN VERSION.
+mlflow version: NOT INSTALLED or UNKNOWN VERSION.
+pynrrd version: NOT INSTALLED or UNKNOWN VERSION.
+
+For details about installing the optional dependencies, please visit:
+    https://docs.monai.io/en/latest/installation.html#installing-the-recommended-dependencies
+
+original_setup.py
+USING BRAINMASK NORMED
+determinism seed = 0
+lr lower lim:  1e-05
+lr:  0.0001
+Workers:  2
+Batch size:  2
+2 channel seg:  0
+Augment modalities?:  False
+Total modalities:  ['DP', 'FLAIR', 'T1', 'T1c', 'T2']
+BRATS channel map:  [1, 2, 3]
+ATLAS channel map:  [2]
+MSSEG channel map:  [1, 2, 3]
+ISLES channel map:  [1, 2, 4, 3]
+Training ISLES
+Running on GPU:1
+Running for epochs:1000
+Layers: 16,32,64,128,256
+Dropout: 0.2
+TRAINING WITH UNET
+now two subunits per residual unit in the upsample path, and modified final layer so upsample and two subunits of residual unit keep channels high then add a final convolution at the end reducing channels to one channel at output
+Also using avg pool residual units
+IN channels:  5
+Channels:  (16, 32, 64, 128, 256)
+Dropout  0.2
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+LOADING MODEL:  /home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth
+in_channels= 5
+batch size =  2
+----------
+epoch 1/1000
+1/10, train_loss: 0.2232
+2/10, train_loss: 1.0000
+3/10, train_loss: 0.5138
+4/10, train_loss: 0.6562
+5/10, train_loss: 0.3577
+6/10, train_loss: 0.2746
+7/10, train_loss: 1.0000
+8/10, train_loss: 0.3434
+9/10, train_loss: 0.2189
+10/10, train_loss: 0.4581
+epoch 1 average loss: 0.5046
+current epoch: 1 current mean dice ISLES: 0.5910 best mean dice ISLES: 0.5910 at epoch 1
+----------
+epoch 2/1000
+1/10, train_loss: 0.4581
+2/10, train_loss: 0.6103
+3/10, train_loss: 0.2099
+4/10, train_loss: 0.7467
+5/10, train_loss: 0.3075
+6/10, train_loss: 0.5588
+7/10, train_loss: 0.9005
+8/10, train_loss: 0.5674
+9/10, train_loss: 0.6131
+10/10, train_loss: 0.3894
+epoch 2 average loss: 0.5362
+current epoch: 2 current mean dice ISLES: 0.5914 best mean dice ISLES: 0.5914 at epoch 2
+----------
+epoch 3/1000
+1/10, train_loss: 0.9110
+2/10, train_loss: 0.2231
+3/10, train_loss: 0.2353
+4/10, train_loss: 0.7006
+5/10, train_loss: 0.2516
+6/10, train_loss: 0.2809
+7/10, train_loss: 0.5627
+8/10, train_loss: 0.5918
+9/10, train_loss: 0.7776
+10/10, train_loss: 0.5734
+epoch 3 average loss: 0.5108
+current epoch: 3 current mean dice ISLES: 0.5928 best mean dice ISLES: 0.5928 at epoch 3
+----------
+epoch 4/1000
+1/10, train_loss: 0.1503
+2/10, train_loss: 0.4219
+3/10, train_loss: 0.5515
+4/10, train_loss: 0.1000
+5/10, train_loss: 0.7957
+6/10, train_loss: 0.9994
+7/10, train_loss: 0.7887
+8/10, train_loss: 0.6562
+9/10, train_loss: 0.5572
+10/10, train_loss: 0.6170
+epoch 4 average loss: 0.5638
+current epoch: 4 current mean dice ISLES: 0.5914 best mean dice ISLES: 0.5928 at epoch 3
+----------
+epoch 5/1000
+1/10, train_loss: 0.3562
+2/10, train_loss: 0.7837
+3/10, train_loss: 0.1857
+4/10, train_loss: 0.6593
+5/10, train_loss: 0.5969
+6/10, train_loss: 0.9915
+7/10, train_loss: 0.5992
+8/10, train_loss: 0.6055
+9/10, train_loss: 0.2167
+10/10, train_loss: 0.6439
+epoch 5 average loss: 0.5639
+current epoch: 5 current mean dice ISLES: 0.5930 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 6/1000
+1/10, train_loss: 0.8047
+2/10, train_loss: 0.3336
+3/10, train_loss: 0.6481
+4/10, train_loss: 0.7687
+5/10, train_loss: 0.1605
+6/10, train_loss: 0.2558
+7/10, train_loss: 0.7184
+8/10, train_loss: 0.6921
+9/10, train_loss: 0.5210
+10/10, train_loss: 0.7337
+epoch 6 average loss: 0.5637
+current epoch: 6 current mean dice ISLES: 0.5925 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 7/1000
+1/10, train_loss: 0.5772
+2/10, train_loss: 0.5398
+3/10, train_loss: 0.3531
+4/10, train_loss: 0.6332
+5/10, train_loss: 0.6293
+6/10, train_loss: 1.0000
+7/10, train_loss: 0.5749
+8/10, train_loss: 0.9356
+9/10, train_loss: 0.7410
+10/10, train_loss: 0.1946
+epoch 7 average loss: 0.6179
+current epoch: 7 current mean dice ISLES: 0.5918 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 8/1000
+1/10, train_loss: 0.5703
+2/10, train_loss: 0.3246
+3/10, train_loss: 0.2492
+4/10, train_loss: 0.3576
+5/10, train_loss: 0.5934
+6/10, train_loss: 0.5554
+7/10, train_loss: 0.7820
+8/10, train_loss: 0.3623
+9/10, train_loss: 0.5640
+10/10, train_loss: 0.9734
+epoch 8 average loss: 0.5332
+current epoch: 8 current mean dice ISLES: 0.5909 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 9/1000
+1/10, train_loss: 0.7890
+2/10, train_loss: 0.6851
+3/10, train_loss: 0.7038
+4/10, train_loss: 0.3017
+5/10, train_loss: 0.2038
+6/10, train_loss: 0.5634
+7/10, train_loss: 0.2816
+8/10, train_loss: 0.4305
+9/10, train_loss: 1.0000
+10/10, train_loss: 0.6294
+epoch 9 average loss: 0.5588
+current epoch: 9 current mean dice ISLES: 0.5904 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 10/1000
+1/10, train_loss: 0.2467
+2/10, train_loss: 0.7075
+3/10, train_loss: 0.5086
+4/10, train_loss: 0.5954
+5/10, train_loss: 0.1284
+6/10, train_loss: 0.5767
+7/10, train_loss: 0.3842
+8/10, train_loss: 1.0000
+9/10, train_loss: 0.5956
+10/10, train_loss: 0.7706
+epoch 10 average loss: 0.5514
+current epoch: 10 current mean dice ISLES: 0.5874 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 11/1000
+1/10, train_loss: 1.0000
+2/10, train_loss: 0.3577
+3/10, train_loss: 0.3515
+4/10, train_loss: 0.8379
+5/10, train_loss: 0.7550
+6/10, train_loss: 0.9395
+7/10, train_loss: 0.6138
+8/10, train_loss: 0.2272
+9/10, train_loss: 0.3132
+10/10, train_loss: 0.5621
+epoch 11 average loss: 0.5958
+current epoch: 11 current mean dice ISLES: 0.5869 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 12/1000
+1/10, train_loss: 0.6119
+2/10, train_loss: 0.7953
+3/10, train_loss: 0.7404
+4/10, train_loss: 0.6581
+5/10, train_loss: 0.1864
+6/10, train_loss: 0.5907
+7/10, train_loss: 0.3981
+8/10, train_loss: 0.2177
+9/10, train_loss: 0.5745
+10/10, train_loss: 0.1588
+epoch 12 average loss: 0.4932
+current epoch: 12 current mean dice ISLES: 0.5851 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 13/1000
+1/10, train_loss: 0.1738
+2/10, train_loss: 0.1739
+3/10, train_loss: 0.3055
+4/10, train_loss: 1.0000
+5/10, train_loss: 0.3632
+6/10, train_loss: 0.7798
+7/10, train_loss: 0.7546
+8/10, train_loss: 0.6178
+9/10, train_loss: 0.6354
+10/10, train_loss: 0.4405
+epoch 13 average loss: 0.5244
+current epoch: 13 current mean dice ISLES: 0.5862 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 14/1000
+1/10, train_loss: 0.3191
+2/10, train_loss: 0.2557
+3/10, train_loss: 0.6576
+4/10, train_loss: 0.9833
+5/10, train_loss: 0.6259
+6/10, train_loss: 0.5237
+7/10, train_loss: 0.5581
+8/10, train_loss: 0.2525
+9/10, train_loss: 0.5000
+10/10, train_loss: 0.6016
+epoch 14 average loss: 0.5277
+current epoch: 14 current mean dice ISLES: 0.5832 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 15/1000
+1/10, train_loss: 0.4036
+2/10, train_loss: 0.3360
+3/10, train_loss: 0.2413
+4/10, train_loss: 0.6600
+5/10, train_loss: 0.9512
+6/10, train_loss: 0.1041
+7/10, train_loss: 0.6425
+8/10, train_loss: 0.2319
+9/10, train_loss: 0.6274
+10/10, train_loss: 0.1716
+epoch 15 average loss: 0.4370
+current epoch: 15 current mean dice ISLES: 0.5786 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 16/1000
+1/10, train_loss: 1.0000
+2/10, train_loss: 0.6616
+3/10, train_loss: 1.0000
+4/10, train_loss: 0.7744
+5/10, train_loss: 0.5891
+6/10, train_loss: 0.8565
+7/10, train_loss: 0.3277
+8/10, train_loss: 0.4110
+9/10, train_loss: 0.1701
+10/10, train_loss: 0.8375
+epoch 16 average loss: 0.6628
+current epoch: 16 current mean dice ISLES: 0.5758 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 17/1000
+1/10, train_loss: 0.3484
+2/10, train_loss: 0.1867
+3/10, train_loss: 0.6351
+4/10, train_loss: 0.4917
+5/10, train_loss: 0.9172
+6/10, train_loss: 0.5912
+7/10, train_loss: 0.7418
+8/10, train_loss: 0.6158
+9/10, train_loss: 0.6217
+10/10, train_loss: 0.3358
+epoch 17 average loss: 0.5485
+current epoch: 17 current mean dice ISLES: 0.5858 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 18/1000
+1/10, train_loss: 0.7700
+2/10, train_loss: 0.3721
+3/10, train_loss: 0.1894
+4/10, train_loss: 1.0000
+5/10, train_loss: 0.3315
+6/10, train_loss: 0.2423
+7/10, train_loss: 0.1835
+8/10, train_loss: 0.6209
+9/10, train_loss: 0.3628
+10/10, train_loss: 0.9994
+epoch 18 average loss: 0.5072
+current epoch: 18 current mean dice ISLES: 0.5909 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 19/1000
+1/10, train_loss: 0.3893
+2/10, train_loss: 0.2165
+3/10, train_loss: 1.0000
+4/10, train_loss: 0.1848
+5/10, train_loss: 0.7017
+6/10, train_loss: 1.0000
+7/10, train_loss: 0.2619
+8/10, train_loss: 0.5789
+9/10, train_loss: 0.2759
+10/10, train_loss: 0.2939
+epoch 19 average loss: 0.4903
+current epoch: 19 current mean dice ISLES: 0.5882 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 20/1000
+1/10, train_loss: 0.3605
+2/10, train_loss: 0.1298
+3/10, train_loss: 0.2062
+4/10, train_loss: 0.5235
+5/10, train_loss: 0.5527
+6/10, train_loss: 1.0000
+7/10, train_loss: 0.5792
+8/10, train_loss: 0.3911
+9/10, train_loss: 0.7363
+10/10, train_loss: 0.1756
+epoch 20 average loss: 0.4655
+current epoch: 20 current mean dice ISLES: 0.5846 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 21/1000
+1/10, train_loss: 1.0000
+2/10, train_loss: 0.3637
+3/10, train_loss: 0.5686
+4/10, train_loss: 0.8527
+5/10, train_loss: 1.0000
+6/10, train_loss: 0.6941
+7/10, train_loss: 0.1335
+8/10, train_loss: 0.2192
+9/10, train_loss: 0.2176
+10/10, train_loss: 0.5983
+epoch 21 average loss: 0.5648
+current epoch: 21 current mean dice ISLES: 0.5821 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 22/1000
+1/10, train_loss: 0.6496
+2/10, train_loss: 0.5557
+3/10, train_loss: 0.4119
+4/10, train_loss: 0.6320
+5/10, train_loss: 0.5578
+6/10, train_loss: 0.2369
+7/10, train_loss: 0.2408
+8/10, train_loss: 1.0000
+9/10, train_loss: 0.3662
+10/10, train_loss: 0.3182
+epoch 22 average loss: 0.4969
+current epoch: 22 current mean dice ISLES: 0.5798 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 23/1000
+1/10, train_loss: 0.6393
+2/10, train_loss: 0.1770
+3/10, train_loss: 0.6133
+4/10, train_loss: 0.6094
+5/10, train_loss: 0.3153
+6/10, train_loss: 0.1862
+7/10, train_loss: 0.5582
+8/10, train_loss: 0.6301
+9/10, train_loss: 0.5762
+10/10, train_loss: 0.3602
+epoch 23 average loss: 0.4665
+current epoch: 23 current mean dice ISLES: 0.5777 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 24/1000
+1/10, train_loss: 0.2913
+2/10, train_loss: 0.2356
+3/10, train_loss: 0.6321
+4/10, train_loss: 0.5656
+5/10, train_loss: 0.3675
+6/10, train_loss: 0.1350
+7/10, train_loss: 0.6088
+8/10, train_loss: 0.7178
+9/10, train_loss: 0.3497
+10/10, train_loss: 0.4279
+epoch 24 average loss: 0.4331
+current epoch: 24 current mean dice ISLES: 0.5785 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 25/1000
+1/10, train_loss: 1.0000
+2/10, train_loss: 0.6506
+3/10, train_loss: 0.1534
+4/10, train_loss: 0.3234
+5/10, train_loss: 0.3724
+6/10, train_loss: 1.0000
+7/10, train_loss: 0.3100
+8/10, train_loss: 0.3355
+9/10, train_loss: 0.2324
+10/10, train_loss: 1.0000
+epoch 25 average loss: 0.5378
+current epoch: 25 current mean dice ISLES: 0.5760 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 26/1000
+1/10, train_loss: 0.2967
+2/10, train_loss: 0.1425
+3/10, train_loss: 0.3920
+4/10, train_loss: 0.2320
+5/10, train_loss: 0.1983
+6/10, train_loss: 0.3045
+7/10, train_loss: 0.2991
+8/10, train_loss: 0.2234
+9/10, train_loss: 1.0000
+10/10, train_loss: 1.0000
+epoch 26 average loss: 0.4089
+current epoch: 26 current mean dice ISLES: 0.5765 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 27/1000
+1/10, train_loss: 0.4407
+2/10, train_loss: 0.3412
+3/10, train_loss: 0.2226
+4/10, train_loss: 0.5751
+5/10, train_loss: 0.5622
+6/10, train_loss: 0.3006
+7/10, train_loss: 1.0000
+8/10, train_loss: 0.2130
+9/10, train_loss: 0.8953
+10/10, train_loss: 0.6461
+epoch 27 average loss: 0.5197
+current epoch: 27 current mean dice ISLES: 0.5793 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 28/1000
+1/10, train_loss: 0.1531
+2/10, train_loss: 0.3596
+3/10, train_loss: 0.6051
+4/10, train_loss: 0.6332
+5/10, train_loss: 1.0000
+6/10, train_loss: 0.6307
+7/10, train_loss: 0.5460
+8/10, train_loss: 0.5711
+9/10, train_loss: 0.2980
+10/10, train_loss: 0.6834
+epoch 28 average loss: 0.5480
+current epoch: 28 current mean dice ISLES: 0.5808 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 29/1000
+1/10, train_loss: 0.3111
+2/10, train_loss: 0.9347
+3/10, train_loss: 0.5634
+4/10, train_loss: 0.3619
+5/10, train_loss: 0.5677
+6/10, train_loss: 0.4929
+7/10, train_loss: 0.2160
+8/10, train_loss: 0.5643
+9/10, train_loss: 0.5624
+10/10, train_loss: 0.7526
+epoch 29 average loss: 0.5327
+current epoch: 29 current mean dice ISLES: 0.5811 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 30/1000
+1/10, train_loss: 0.3589
+2/10, train_loss: 0.1492
+3/10, train_loss: 0.5543
+4/10, train_loss: 0.5039
+5/10, train_loss: 0.7025
+6/10, train_loss: 0.6223
+7/10, train_loss: 0.0909
+8/10, train_loss: 0.1955
+9/10, train_loss: 0.6848
+10/10, train_loss: 0.3361
+epoch 30 average loss: 0.4199
+current epoch: 30 current mean dice ISLES: 0.5813 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 31/1000
+1/10, train_loss: 0.8519
+2/10, train_loss: 0.6965
+3/10, train_loss: 0.2579
+4/10, train_loss: 0.2037
+5/10, train_loss: 0.4156
+6/10, train_loss: 0.1986
+7/10, train_loss: 0.5805
+8/10, train_loss: 0.7700
+9/10, train_loss: 0.5995
+10/10, train_loss: 0.5782
+epoch 31 average loss: 0.5152
+current epoch: 31 current mean dice ISLES: 0.5753 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 32/1000
+1/10, train_loss: 0.5000
+2/10, train_loss: 0.5627
+3/10, train_loss: 0.5787
+4/10, train_loss: 0.1761
+5/10, train_loss: 0.5942
+6/10, train_loss: 0.2249
+7/10, train_loss: 0.1131
+8/10, train_loss: 0.1794
+9/10, train_loss: 0.8180
+10/10, train_loss: 0.2770
+epoch 32 average loss: 0.4024
+current epoch: 32 current mean dice ISLES: 0.5686 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 33/1000
+1/10, train_loss: 0.5734
+2/10, train_loss: 0.3398
+3/10, train_loss: 0.2607
+4/10, train_loss: 0.1635
+5/10, train_loss: 0.5885
+6/10, train_loss: 1.0000
+7/10, train_loss: 0.2494
+8/10, train_loss: 0.1068
+9/10, train_loss: 0.9994
+10/10, train_loss: 0.4526
+epoch 33 average loss: 0.4734
+current epoch: 33 current mean dice ISLES: 0.5683 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 34/1000
+1/10, train_loss: 0.3335
+2/10, train_loss: 1.0000
+3/10, train_loss: 0.1207
+4/10, train_loss: 0.6369
+5/10, train_loss: 0.1969
+6/10, train_loss: 0.2670
+7/10, train_loss: 0.3034
+8/10, train_loss: 0.2136
+9/10, train_loss: 0.5969
+10/10, train_loss: 0.3659
+epoch 34 average loss: 0.4035
+current epoch: 34 current mean dice ISLES: 0.5813 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 35/1000
+1/10, train_loss: 0.3394
+2/10, train_loss: 1.0000
+3/10, train_loss: 0.1904
+4/10, train_loss: 0.2841
+5/10, train_loss: 0.4031
+6/10, train_loss: 0.7040
+7/10, train_loss: 0.5724
+8/10, train_loss: 0.6065
+9/10, train_loss: 0.1456
+10/10, train_loss: 0.8325
+epoch 35 average loss: 0.5078
+current epoch: 35 current mean dice ISLES: 0.5849 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 36/1000
+1/10, train_loss: 0.2714
+2/10, train_loss: 0.1795
+3/10, train_loss: 0.5557
+4/10, train_loss: 0.3294
+5/10, train_loss: 0.2280
+6/10, train_loss: 0.6500
+7/10, train_loss: 0.9555
+8/10, train_loss: 0.5798
+9/10, train_loss: 0.5546
+10/10, train_loss: 0.2945
+epoch 36 average loss: 0.4598
+current epoch: 36 current mean dice ISLES: 0.5899 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 37/1000
+1/10, train_loss: 0.6872
+2/10, train_loss: 0.1729
+3/10, train_loss: 0.1798
+4/10, train_loss: 0.1861
+5/10, train_loss: 0.3724
+6/10, train_loss: 0.7082
+7/10, train_loss: 1.0000
+8/10, train_loss: 0.2262
+9/10, train_loss: 0.4327
+10/10, train_loss: 0.3776
+epoch 37 average loss: 0.4343
+current epoch: 37 current mean dice ISLES: 0.5899 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 38/1000
+1/10, train_loss: 0.5844
+2/10, train_loss: 0.1914
+3/10, train_loss: 1.0000
+4/10, train_loss: 0.6383
+5/10, train_loss: 0.4604
+6/10, train_loss: 0.3895
+7/10, train_loss: 0.2203
+8/10, train_loss: 0.5640
+9/10, train_loss: 0.6165
+10/10, train_loss: 0.5955
+epoch 38 average loss: 0.5260
+current epoch: 38 current mean dice ISLES: 0.5898 best mean dice ISLES: 0.5930 at epoch 5
+----------
+epoch 39/1000

@@ -132,10 +132,10 @@ if __name__ == "__main__":
     print("lr lower lim: ", lr_lower_lim)
 
     workers = 2
-    train_batch_size = 1
+    train_batch_size = 2
     cropped_input_size = [128,128,128]
-    val_interval = 4
-    lr = 1e-3
+    val_interval = 1
+    lr = 1e-4
     print("lr: ",lr)
 
     print("Workers: ", workers)
@@ -194,8 +194,8 @@ if __name__ == "__main__":
     # /////////////////////////////////////////
     # /////////////////////////////////////////
     # print("MANUALLY SETTING ISLES CHANNEL MAP")
-    # ISLES_channel_map = [1,2,4,3]
-    # total_modalities = ['DP', 'FLAIR', 'T1', 'T1c', 'T2']
+    ISLES_channel_map = [1,2,4,3]
+    total_modalities = ['DP', 'FLAIR', 'T1', 'T1c', 'T2']
     
     print("Total modalities: ", total_modalities)
     print("BRATS channel map: ", BRATS_channel_map)
@@ -312,9 +312,9 @@ if __name__ == "__main__":
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth"
-        # print("LOADING MODEL: ", load_model_path)
-        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth"
+        print("LOADING MODEL: ", load_model_path)
+        model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
 
     elif model_type == "HEMIS_spatial_attention":
         print("TRAINING WITH HEMIS SPATIAL ATTENTION")
@@ -333,14 +333,16 @@ if __name__ == "__main__":
 
         #///////////////////////////////////////////////////
         #///////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/HEM_SPATIAL_ATTENTION/HEM_Spatial_Attention_BRATS_ATLAS_ISLES_RAND_BEST_ATLAS.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
         # print("LOADING MODEL: ", load_model_path)
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFN":
+        model = MSFN(paired=False).to(device)
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
+        print("LOADING MODEL: ", load_model_path)
+        model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+    elif model_type == "MSFNP":
         model = MSFN(paired=True).to(device)
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN/MSFN_BRATS_ATLAS_ISLES_RAND_BEST_ATLAS.pth"
-        # print("LOADING MODEL: ", load_model_path)
-        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
 
 
     # model_path = "/home/sedm6251/projectMaterial/baseline_models/BRATS_Decathlon_2016_17/Single_Unet_modality_1_T1w_brain_mask_normed.pth"

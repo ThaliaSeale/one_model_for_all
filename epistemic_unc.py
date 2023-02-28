@@ -2,6 +2,7 @@ import torch
 # import torch.nn as nn
 from monai.inferers import sliding_window_inference
 from matplotlib import pyplot as plt
+import nibabel as nib
 # from torchmetrics.functional import kl_divergence
 
 class Epistemic:
@@ -43,32 +44,33 @@ class Epistemic:
         print("Percent of predicted pixels uncertain: " + str(percent_uncertain_predicted) + "%")
 
 
-        return mean_output, var_mask
+        
 
         # var_detached = var.cpu().detach().numpy()
-        # outputs_1_detached = outputs[0].cpu().detach().numpy()
+        # # outputs_1_detached = outputs[0].cpu().detach().numpy()
         # mean_output_detached = mean_output.cpu().detach().numpy()
         # segmented = mean_output_detached>0.5
-        # prob_0_detached = probs[0].cpu().detach().numpy()
-        # prob_1_detached = probs[1].cpu().detach().numpy()
-        # prob_2_detached = probs[2].cpu().detach().numpy()
+        # # prob_0_detached = probs[0].cpu().detach().numpy()
+        # # prob_1_detached = probs[1].cpu().detach().numpy()
+        # # prob_2_detached = probs[2].cpu().detach().numpy()
 
         # _, axs = plt.subplots(3,3)
-        # axs[0,1].imshow(var_detached[0,0,:,:,30],cmap="gray")
-        # axs[0,0].imshow(mean_output_detached[0,0,:,:,30],cmap="gray")
-        # axs[0,2].imshow(segmented[0,0,:,:,30],cmap="gray")
+        # axs[0,1].imshow(var_detached[0,0,:,:,70],cmap="gray")
+        # axs[0,0].imshow(mean_output_detached[0,0,:,:,70],cmap="gray")
+        # axs[0,2].imshow(segmented[0,0,:,:,70],cmap="gray")
 
         # axs[1,0].imshow(mean_output_detached[0,0,:,:,40],cmap="gray")
         # axs[1,1].imshow(var_detached[0,0,:,:,40],cmap="gray")
         # axs[1,2].imshow(segmented[0,0,:,:,40],cmap="gray")
 
-        # axs[2,0].imshow(mean_output_detached[0,0,:,:,50],cmap="gray")
-        # axs[2,1].imshow(var_detached[0,0,:,:,50],cmap="gray")
-        # axs[2,2].imshow(segmented[0,0,:,:,50],cmap="gray")
-        # axs[1,0].imshow(outputs_1_detached[0,0,:,:,outputs_1_detached.shape[2]//2 - 10],cmap="gray")
-        # axs[1,1].imshow(prob_0_detached[0,0,:,:,prob_0_detached.shape[2]//2 - 10],cmap="gray")
-        # axs[2,0].imshow(prob_1_detached[0,0,:,:,prob_1_detached.shape[2]//2 - 10],cmap="gray")
-        # axs[2,1].imshow(prob_2_detached[0,0,:,:,prob_2_detached.shape[2]//2 - 10],cmap="gray")
-        # plt.show()
+        # axs[2,0].imshow(mean_output_detached[0,0,:,:,100],cmap="gray")
+        # axs[2,1].imshow(var_detached[0,0,:,:,100],cmap="gray")
+        # axs[2,2].imshow(segmented[0,0,:,:,100],cmap="gray")
+        # # # axs[1,0].imshow(outputs_1_detached[0,0,:,:,outputs_1_detached.shape[2]//2 - 10],cmap="gray")
+        # # # axs[1,1].imshow(prob_0_detached[0,0,:,:,prob_0_detached.shape[2]//2 - 10],cmap="gray")
+        # # # axs[2,0].imshow(prob_1_detached[0,0,:,:,prob_1_detached.shape[2]//2 - 10],cmap="gray")
+        # # # axs[2,1].imshow(prob_2_detached[0,0,:,:,prob_2_detached.shape[2]//2 - 10],cmap="gray")
 
+        # plt.show()
+        return mean_output, var_mask, var
         print("Done")

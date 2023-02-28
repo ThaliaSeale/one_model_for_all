@@ -209,11 +209,35 @@ def test(model, val_loader, modalities, device, channel_map, modalities_present_
         val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
       else:
         ep = epistemic_unc.Epistemic()
-        mean_out, var_mask = ep.calculate_unc(model, val_images)
+        mean_out, var_mask, var = ep.calculate_unc(model, val_images)
         val_outputs = mean_out
         # val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
       
       val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+
+
+      vars_numpy = var.cpu().detach().numpy()
+      vars_numpy = np.squeeze(vars_numpy)
+      # vars_numpy = np.transpose(vars_numpy,(1,2,3,0))
+      new_image = nib.Nifti1Image(vars_numpy,affine=None)
+      sform = np.diag([1, 1, 1, 1])
+      # t = [-98,-134,-72,1]
+      # sform[:,3] = t
+      new_image.header.set_sform(sform)
+      nib.save(new_image,"/home/sedm6251/projectMaterial/baseline_models/Combined_Training/Test_ISLES/MSFN_BRATS_ATLAS_MSSEG_BEST_BRATS_FLAIR_T1_T2_DWI/EP_UNC/ep_var_"+str(steps) + ".nii.gz")
+
+      output_numpy = val_outputs[0].cpu().detach().numpy()
+      output_numpy = np.squeeze(output_numpy)
+      # output_numpy = np.transpose(output_numpy,(1,2,3,0))
+      new_image = nib.Nifti1Image(output_numpy,affine=None)
+      sform = np.diag([1, 1, 1, 1])
+      # t = [-98,-134,-72,1]
+      # sform[:,3] = t
+      new_image.header.set_sform(sform, code='aligned')
+      nib.save(new_image,"/home/sedm6251/projectMaterial/baseline_models/Combined_Training/Test_ISLES/MSFN_BRATS_ATLAS_MSSEG_BEST_BRATS_FLAIR_T1_T2_DWI/EP_OUT/ep_out_"+str(steps) + ".nii.gz")
+
+
+
       val_outputs = torch.mul(val_outputs[0],var_mask)
 
       # manual DWI for MSFN BRATS ATLAS MSSEG - ISLES val data

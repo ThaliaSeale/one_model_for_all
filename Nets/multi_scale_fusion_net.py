@@ -135,7 +135,7 @@ class Paired_Spatial_Attention(nn.Module):
         dict_masks = {}
         for combination in modality_combinations:
             combination = list(combination)
-            random.shuffle(combination)
+            # random.shuffle(combination)
             mod_1_index = combination[0]
             mod_2_index = combination[1]
             mod_1 = modalities[mod_1_index]
