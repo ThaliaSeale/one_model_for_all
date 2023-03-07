@@ -11,6 +11,7 @@ from UNet_block import UNet_block
 from UNet_block_deprecated import UNet_block_deprecated
 import nibabel as nib
 import numpy as np
+from Nets.theory_UNET import theory_UNET
 
 
 class Channel_Attention(nn.Module):
@@ -153,18 +154,20 @@ class HEMISv2(nn.Module):
                 last_layer_adn=True
             )
         else:
-            print("Using non-grid UNet - upsample then one conv")
-            self.model_1 = UNet_block(
-                spatial_dims=3,
-                in_channels=1,
-                out_channels=UNet_outs,
-                kernel_size = (3,3,3),
-                channels=(16, 32, 64, 128, 256),
-                strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
-                num_res_units=2,
-                dropout=dropout,
-                last_layer_adn=True
-            )
+            # print("Using non-grid UNet - upsample then one conv")
+            # self.model_1 = UNet_block(
+            #     spatial_dims=3,
+            #     in_channels=1,
+            #     out_channels=UNet_outs,
+            #     kernel_size = (3,3,3),
+            #     channels=(16, 32, 64, 128, 256),
+            #     strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
+            #     num_res_units=2,
+            #     dropout=dropout,
+            #     last_layer_adn=True
+            # )
+            print("USING THEORY UNET")
+            self.model_1 = theory_UNET(in_channels=1, out_channels = UNet_outs,last_layer_conv_only = True)
 
         # takes bool input to have residual units or just convs post fusion
         def create_seg_stage(res_units:bool) -> nn.Module:

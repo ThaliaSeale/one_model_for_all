@@ -3,6 +3,7 @@ import torch
 from monai.inferers import sliding_window_inference
 from matplotlib import pyplot as plt
 import nibabel as nib
+import utils
 # from torchmetrics.functional import kl_divergence
 
 class Epistemic:
@@ -43,7 +44,16 @@ class Epistemic:
         print("Num predicted: ", num_predicted_pixels)
         print("Percent of predicted pixels uncertain: " + str(percent_uncertain_predicted) + "%")
 
+        segmented = mean_output>0.5
 
+        tensors_to_plot = [mean_output, var, segmented,
+                           mean_output, var, segmented,
+                           mean_output, var, segmented]
+        slices = [40, 40, 40,
+                  70, 70, 70,
+                  100, 100, 100]
+
+        utils.plot_slices(tensors_to_plot,slices,3)
         
 
         # var_detached = var.cpu().detach().numpy()

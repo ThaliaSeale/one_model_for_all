@@ -121,11 +121,12 @@ class Paired_Spatial_Attention(nn.Module):
         print("Out channels: ", 2*out_channels)
 
         self.in_channels = in_channels
-        conv_1 = Convolution(spatial_dims=3, in_channels=2*in_channels, out_channels=2*conv_1_out_channels, kernel_size=3, strides=1,dropout=dropout)
-        conv_2 = Convolution(spatial_dims=3, in_channels=2*conv_1_out_channels, out_channels=2*out_channels, kernel_size=3, strides=1, dropout=dropout)
+        conv_1 = Convolution(spatial_dims=3, in_channels=2*in_channels, out_channels=conv_1_out_channels, kernel_size=3, strides=1,dropout=dropout)
+        conv_2 = Convolution(spatial_dims=3, in_channels=conv_1_out_channels, out_channels=2*out_channels, kernel_size=3, strides=1, dropout=dropout)
 
         self.conv = nn.Sequential(conv_1,conv_2)
         self.softmax = nn.Softmax(dim=0)
+        print("NO SHUFFLE")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 

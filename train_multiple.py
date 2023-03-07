@@ -29,8 +29,9 @@ from monai.networks.nets.unet import UNet
 from HEMISv2 import HEMISv2
 from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
+from Nets.theory_UNET import theory_UNET
 
-def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list):
+def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, is_TBI = False):
 
     train_imtrans = Compose(
         [
@@ -118,24 +119,24 @@ if __name__ == "__main__":
     model_type = str(sys.argv[8])
     augment_modalities = bool(int(sys.argv[9]))
 
-    # device_id = 0
+    # device_id = 1
     # epochs = 1000
-    # save_name = "DEL"
+    # save_name = "DELETE"
     # # modalities = "0123"
-    # dataset = "BRATS"
+    # dataset = "TBI"
     # randomly_drop = 0
     # BRATS_two_channel_seg = 0
     # lr_lower_lim = 1e-5
-    # model_type = "MSFN"
+    # model_type = "UNET"
     # augment_modalities = False
 
     print("lr lower lim: ", lr_lower_lim)
 
     workers = 2
-    train_batch_size = 2
+    train_batch_size = 3
     cropped_input_size = [128,128,128]
-    val_interval = 1
-    lr = 1e-4
+    val_interval = 2
+    lr = 1e-3
     print("lr: ",lr)
 
     print("Workers: ", workers)
@@ -147,20 +148,23 @@ if __name__ == "__main__":
     total_size_ATLAS = 654
     total_size_MSSEG = 53
     total_size_ISLES = 28
+    total_size_TBI = 281
 
     train_size_BRATS = 444
     train_size_ATLAS = 459
     train_size_MSSEG = 37
     train_size_ISLES = 20
+    train_size_TBI = 156
 
     channels_BRATS = ["FLAIR", "T1", "T1c", "T2"]
     channels_ATLAS = ["T1"]
     channels_MSSEG = ["FLAIR","T1","T1c","T2","DP"]
     channels_ISLES = ["FLAIR", "T1", "T2", "DWI"]
+    channels_TBI = ["FLAIR", "T1", "T2", "SWI"]
 
-    data_size = max(("BRATS" in dataset) * train_size_BRATS, ("ATLAS" in dataset) * train_size_ATLAS, ("MSSEG" in dataset) * train_size_MSSEG, ("ISLES" in dataset) * train_size_ISLES)
+    data_size = max(("BRATS" in dataset) * train_size_BRATS, ("ATLAS" in dataset) * train_size_ATLAS, ("MSSEG" in dataset) * train_size_MSSEG, ("ISLES" in dataset) * train_size_ISLES, ("TBI" in dataset) * train_size_TBI)
     
-    total_modalities = set(("BRATS" in dataset) * channels_BRATS).union(set(("ATLAS" in dataset) * channels_ATLAS)).union(set(("MSSEG" in dataset) * channels_MSSEG)).union(set(("ISLES" in dataset) * channels_ISLES))
+    total_modalities = set(("BRATS" in dataset) * channels_BRATS).union(set(("ATLAS" in dataset) * channels_ATLAS)).union(set(("MSSEG" in dataset) * channels_MSSEG)).union(set(("ISLES" in dataset) * channels_ISLES)).union(set(("TBI" in dataset) * channels_TBI))
     total_modalities = sorted(list(total_modalities))
     
 
@@ -176,6 +180,7 @@ if __name__ == "__main__":
     ATLAS_channel_map = map_channels(channels_ATLAS, total_modalities)
     MSSEG_channel_map = map_channels(channels_MSSEG, total_modalities)
     ISLES_channel_map = map_channels(channels_ISLES, total_modalities)
+    TBI_channel_map = map_channels(channels_TBI, total_modalities)
 
     # ////////CHANGE THIS /////////////
     # /////////////////////////////////////////
@@ -194,14 +199,15 @@ if __name__ == "__main__":
     # /////////////////////////////////////////
     # /////////////////////////////////////////
     # print("MANUALLY SETTING ISLES CHANNEL MAP")
-    ISLES_channel_map = [1,2,4,3]
-    total_modalities = ['DP', 'FLAIR', 'T1', 'T1c', 'T2']
+    # MSSEG_channel_map = [1,2,3,4,0]
+    # total_modalities = ['DWI', 'FLAIR', 'T1', 'T1c', 'T2']
     
     print("Total modalities: ", total_modalities)
     print("BRATS channel map: ", BRATS_channel_map)
     print("ATLAS channel map: ", ATLAS_channel_map)
     print("MSSEG channel map: ", MSSEG_channel_map)
     print("ISLES channel map: ", ISLES_channel_map)
+    print("TBI channel map: ", TBI_channel_map)
 
     
     train_loaders = []
@@ -274,6 +280,35 @@ if __name__ == "__main__":
         train_loaders.append(train_loader_ISLES)
         val_loaders.append(val_loader_ISLES)
 
+    if "TBI" in dataset:
+        print("Training TBI")
+        val_size = total_size_TBI-train_size_TBI
+
+        train_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Images"
+        train_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_FLAIR"
+        train_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_SWI"
+        train_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged"
+
+        val_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Images"
+        val_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR"
+        val_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI"
+        val_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged"
+
+        # ///////////// CHANGE THIS TO CHANGE WHICH SEGMENTATION IS USED //////////////
+        train_seg_path = train_seg_path_Merged
+        val_seg_path = val_seg_path_Merged
+        print(train_seg_path)
+        print(val_seg_path)
+
+        images = sorted(glob(os.path.join(train_img_path, "*.nii.gz"))) + sorted(glob(os.path.join(val_img_path, "*.nii.gz")))
+        segs = sorted(glob(os.path.join(train_seg_path, "*.nii.gz"))) + sorted(glob(os.path.join(val_seg_path, "*.nii.gz")))
+
+        train_loader_TBI, val_loader_TBI = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
+
+        data_loader_map["TBI"] = len(train_loaders)
+        train_loaders.append(train_loader_TBI)
+        val_loaders.append(val_loader_TBI)
+
     print("Running on GPU:" + str(device_id))
     print("Running for epochs:" + str(epochs))
     # print("Final layer strides:" + str(2))
@@ -298,37 +333,52 @@ if __name__ == "__main__":
 
     if model_type == "UNET":
         print("TRAINING WITH UNET")
-        model = UNetv2(
-            spatial_dims=3,
-            in_channels=len(total_modalities),
-            out_channels=1,
-            kernel_size = (3,3,3),
-            channels=(16, 32, 64, 128, 256),
-            strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
-            num_res_units=2,
-            dropout=0.2,
-        ).to(device)
+        # model = UNetv2(
+        #     spatial_dims=3,
+        #     in_channels=len(total_modalities),
+        #     out_channels=1,
+        #     kernel_size = (3,3,3),
+        #     channels=(16, 32, 64, 128, 256),
+        #     strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
+        #     num_res_units=2,
+        #     dropout=0.2,
+        # ).to(device)
+        print("training with theoretical unet")
+        model = theory_UNET(in_channels=len(total_modalities)).to(device)
 
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
-        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth"
-        print("LOADING MODEL: ", load_model_path)
-        model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/UNET/RAND/UNetv2_BRATS_ATLAS_ISLES_RAND_BEST_ATLAS.pth"
+        # print("LOADING MODEL: ", load_model_path)
+        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
 
     elif model_type == "HEMIS_spatial_attention":
         print("TRAINING WITH HEMIS SPATIAL ATTENTION")
+        # model = HEMISv2(
+        #     post_seg_res_units=False,
+        #     fusion_type="spatial attention",
+        #     UNet_outs=12,
+        #     conv1_in=12,
+        #     conv1_out=12,
+        #     conv2_in=12,
+        #     conv2_out=12,
+        #     conv3_in=12,
+        #     pred_uncertainty=False,
+        #     grid_UNet=False,
+        # ).to(device)
+
         model = HEMISv2(
             post_seg_res_units=False,
             fusion_type="spatial attention",
             UNet_outs=12,
             conv1_in=12,
-            conv1_out=12,
-            conv2_in=12,
-            conv2_out=12,
-            conv3_in=12,
+            conv1_out=8,
+            conv2_in=8,
+            conv2_out=8,
+            conv3_in=8,
             pred_uncertainty=False,
-            grid_UNet=True,
+            grid_UNet=False,
         ).to(device)
 
         #///////////////////////////////////////////////////
@@ -338,9 +388,9 @@ if __name__ == "__main__":
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFN":
         model = MSFN(paired=False).to(device)
-        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
-        print("LOADING MODEL: ", load_model_path)
-        model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
+        # print("LOADING MODEL: ", load_model_path)
+        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFNP":
         model = MSFN(paired=True).to(device)
 
@@ -363,12 +413,15 @@ if __name__ == "__main__":
     best_metric_ATLAS = -1
     best_metric_MSSEG = -1
     best_metric_ISLES = -1
+    best_metric_TBI = -1
 
 
     best_metric_epoch_BRATS = -1
     best_metric_epoch_ATLAS = -1
     best_metric_epoch_MSSEG = -1
     best_metric_epoch_ISLES = -1
+    best_metric_epoch_TBI = -1
+
     # epoch_loss_values = list()
     metric_values = list()
     # if dataset == "BRATS":
@@ -522,6 +575,30 @@ if __name__ == "__main__":
                 else:
                     if randomly_drop:
                         _, batch[0] = remove_random_channels(channels_ISLES, batch[0])
+                    if augment_modalities:
+                        if batch[0].shape[1] > 1:
+                            should_create_modality = bool(random.randint(0,1))
+                            if should_create_modality:
+                                batch[0] = augment(batch[0])
+                    input_data = batch[0].to(device)
+                label = batch[1].to(device)
+                out = model(input_data)
+                outputs.append(out)
+                labels.append(label)
+
+            if "TBI" in dataset:
+                loader_index = data_loader_map["TBI"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+                    if randomly_drop:
+                        _, batch[0] = rand_set_channels_to_zero(channels_TBI, batch[0])                    
+                    input_data = torch.from_numpy(np.zeros((batch[0].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,TBI_channel_map,:,:,:] = batch[0]
+                    input_data = input_data.to(device)
+                else:
+                    if randomly_drop:
+                        _, batch[0] = remove_random_channels(channels_TBI, batch[0])
                     if augment_modalities:
                         if batch[0].shape[1] > 1:
                             should_create_modality = bool(random.randint(0,1))
@@ -722,7 +799,42 @@ if __name__ == "__main__":
                     )
                     writer.add_scalar("val_mean_dice_ISLES", metric_ISLES, epoch_len * (epoch+1))
 
+                if "TBI" in dataset:
 
+                    loader_index = data_loader_map["TBI"]
+                    for val_data in val_loader_TBI:
+                        # batch = val_data[loader_index]
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,TBI_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
+                        label = val_data[1].to(device)
+                        
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_TBI = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
+
+                    if metric_TBI > best_metric_TBI:
+                        best_metric_TBI = metric_TBI
+                        best_metric_epoch_TBI = epoch + 1
+                        if epoch>150:
+                            model_save_name = model_save_path + save_name + "_BEST_TBI.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model")
+                    print(
+                        "current epoch: {} current mean dice TBI: {:.4f} best mean dice TBI: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_TBI, best_metric_TBI, best_metric_epoch_TBI
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_TBI", metric_TBI, epoch_len * (epoch+1))
 
                 
                 # scheduler.step(metric,epoch=epoch)
