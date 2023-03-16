@@ -4,11 +4,11 @@ import torch
 import torch.nn as nn
 from Nets.UNetv2 import UNetv2
 # import UNetv2
-from updated_res_units import ResidualUnit, Convolution
+from Nets.updated_res_units import ResidualUnit, Convolution
 # import monai.networks.nets.unet as UNet
 # import orig_UNet_but_with_avg_pool_res_unit as UNetAvgPool
-from UNet_block import UNet_block
-from UNet_block_deprecated import UNet_block_deprecated
+from Nets.UNet_block import UNet_block
+from Nets.UNet_block_deprecated import UNet_block_deprecated
 import nibabel as nib
 import numpy as np
 from itertools import combinations

@@ -19,7 +19,7 @@ import torch.nn as nn
 from monai.networks.layers.factories import Act, Norm
 from monai.networks.layers.simplelayers import SkipConnection
 from monai.utils import alias, deprecated_arg, export
-from updated_res_units import Convolution, ResidualUnit
+from Nets.updated_res_units import Convolution, ResidualUnit
 # __all__ = ["UNet", "Unet"]
 
 

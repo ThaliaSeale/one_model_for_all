@@ -508,9 +508,9 @@ if __name__ == "__main__":
         epoch_loss = 0
         step = 0
 
-        # if epoch == 150:
-        #     for g in optimizer.param_groups:
-        #         g['lr'] = 1e-4
+        if epoch == 150:
+            for g in optimizer.param_groups:
+                g['lr'] = 1e-4
 
         for batch_data in zip(*train_loaders):
  

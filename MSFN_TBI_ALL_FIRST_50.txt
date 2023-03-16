@@ -1,0 +1,7 @@
+nohup: ignoring input
+Traceback (most recent call last):
+  File "train_multiple.py", line 26, in <module>
+    from Nets.UNetv2 import UNetv2
+  File "/home/sedm6251/projectMaterial/baseline_models/BRATS_Decathlon_2016_17/scripts/Nets/UNetv2.py", line 22, in <module>
+    from updated_res_units import Convolution, ResidualUnit
+ModuleNotFoundError: No module named 'updated_res_units'

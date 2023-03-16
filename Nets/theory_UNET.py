@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from updated_res_units import ResidualUnit, Convolution
+from Nets.updated_res_units import ResidualUnit, Convolution
 
 class theory_UNET(nn.Module):
 
