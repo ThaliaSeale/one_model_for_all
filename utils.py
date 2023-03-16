@@ -1,16 +1,15 @@
 import os
-from monai.data import ImageDataset, decollate_batch, DataLoader
+from monai.data import ImageDataset, decollate_batch, DataLoader, Dataset
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop
+from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop, RandCropByPosNegLabeld, LoadImaged, EnsureChannelFirstd
 from monai.utils import set_determinism
 import numpy as np
 import torch
-from torchmetrics.classification import Recall, JaccardIndex
 from itertools import combinations
 from HEMIS_Nets_Legacy import hemis_style_net as hemNet
 from HEMIS_Nets_Legacy import hemis_style_res_units_after_fusion as hemNet2
-from HEMISv2 import HEMISv2 
+from Nets.HEMISv2 import HEMISv2 
 from Nets.UNetv2 import UNetv2
 from Nets.theory_UNET import theory_UNET
 from Nets.multi_scale_fusion_net import MSFN
@@ -212,3 +211,63 @@ def create_UNET_input(val_data, modalities, dataset_name, net, modalities_presen
   input_data = torch.from_numpy(np.zeros((1,net.modalities_trained_on,val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
   input_data[:,net.channel_map[dataset_name],:,:,:] = val_data[0][:,modalities_present_at_training,:,:,:]
   return input_data
+
+
+
+def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, is_TBI = False):
+
+    div = total_train_data_size//current_train_data_size
+    rem = total_train_data_size%current_train_data_size
+
+    train_images = images[:-val_size]
+    train_images = train_images * div + train_images[:rem]
+    train_segs = segs[:-val_size]
+    train_segs = train_segs * div + train_segs[:rem]
+
+
+    # /////////// TODO REMOVE THIS /////////////////
+    # print("USING ONLY FIRST 50 IMAGES!!!!!")
+    # train_images = images[:50]
+    # train_segs = segs[:50]
+
+    data_dicts = [{"image": image_name, "label": label_name} for image_name, label_name in zip(train_images, train_segs)]
+
+    train_imtrans = Compose(
+        [
+            LoadImaged(keys=["image", "label"]),
+            EnsureChannelFirstd(keys=["image", "label"]),
+            # EnsureChannelFirst(strict_check=True),
+            # RandSpatialCrop((cropped_input_size[0], cropped_input_size[1], cropped_input_size[2]), random_size=False),
+            # RandRotate90(prob=0.1, spatial_axes=(0, 2)),
+            RandCropByPosNegLabeld(
+              keys=["image", "label"],
+              label_key="label",
+              spatial_size=(128, 128, 128),
+              pos=10,
+              neg=1,
+              num_samples=1,
+              image_key="image",
+              image_threshold=0,
+            ),
+        ]
+    )
+    train_segtrans = Compose(
+        [
+            EnsureChannelFirst(strict_check=True),
+            RandSpatialCrop((cropped_input_size[0], cropped_input_size[1], cropped_input_size[2]), random_size=False),
+            RandRotate90(prob=0.1, spatial_axes=(0, 2)),
+        ]
+    )
+    val_imtrans = Compose([EnsureChannelFirst()])
+    val_segtrans = Compose([EnsureChannelFirst()])
+
+
+    # create a training data loader
+    train_ds = Dataset(data=data_dicts, transform=train_imtrans)
+    train_loader = DataLoader(train_ds, batch_size=train_batch_size, shuffle=True, num_workers=workers, pin_memory=0)
+    # train_loader = DataLoader(train_ds, batch_size=4, shuffle=True, num_workers=workers)
+    # create a validation data loader
+    val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
+    val_loader = DataLoader(val_ds, batch_size=1, num_workers=workers, pin_memory=0)
+
+    return train_loader, val_loader

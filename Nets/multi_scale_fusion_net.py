@@ -78,10 +78,11 @@ class Spatial_Attention(nn.Module):
                 conv_outs = torch.cat((conv_outs, torch.unsqueeze(self.conv(modality),dim=0)),dim=0)
             # conv_outs.append(self.conv(modality))
         
-        del modalities
+        # del modalities
         # torch.cuda.empty_cache()
-        
-        conv_outs = self.softmax(conv_outs)
+        # conv_outs = conv_outs.view
+        if len(modalities) != 1:
+            conv_outs = self.softmax(conv_outs)
         
         # s = torch.sum(conv_outs,dim=0)
         # conv_outs = torch.div(conv_outs, s)
@@ -175,7 +176,14 @@ class Paired_Spatial_Attention(nn.Module):
         for modality in dict_masks:
             # att_mask_out[modality] = torch.div(dict_masks[modality],sum_tensor)
             att_mask_out[modality] = dict_masks[modality]
-        att_mask_out = self.softmax(att_mask_out)
+
+        # print("CHECK THIS WORKS")
+        if num_modalities != 1:
+            att_mask_out = self.softmax(att_mask_out)
+            m = torch.mul(att_mask_out, x)
+            s = torch.sum(m,dim=0)
+        else:
+            s = torch.sum(x,dim=0)
 
         # outputs_numpy = att_mask_out[:,0,0,:,:,:].cpu().detach().numpy()
         # outputs_numpy = np.squeeze(outputs_numpy)
@@ -191,7 +199,7 @@ class Paired_Spatial_Attention(nn.Module):
         # save_path = "/home/sedm6251/DELETE_in.nii.gz"
         # nib.save(new_image, save_path)
         
-        m = torch.mul(att_mask_out, x)
+        
 
         # outputs_numpy = m[:,0,0,:,:,:].cpu().detach().numpy()
         # outputs_numpy = np.squeeze(outputs_numpy)
@@ -201,7 +209,7 @@ class Paired_Spatial_Attention(nn.Module):
         # nib.save(new_image, save_path)
 
 
-        s = torch.sum(m,dim=0)
+        
 
         # outputs_numpy = s[0,0,:,:,:].cpu().detach().numpy()
         # outputs_numpy = np.squeeze(outputs_numpy)

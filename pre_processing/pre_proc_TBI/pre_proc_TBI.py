@@ -165,88 +165,88 @@ def check_if_force_train(file_path):
             return True
     else:
         return False
+def main():
+    for i, (FLAIR, SWI, T1, T2, FLAIR_label, SWI_label, merged_label, brain_mask) in enumerate(zip(FLAIR_lines, SWI_lines, T1_lines, T2_lines, labels_FLAIR_lines, labels_SWI_lines, labels_merged_lines, brain_mask_lines)):
+        
+        try:
+            # FLAIR_NIFTI = nib.load(FLAIR)
+            # SWI_NIFTI = nib.load(SWI)
+            # T1_NIFTI = nib.load(T1)
+            # T2_NIFTI = nib.load(T2)
+            FLAIR_label_NIFTI = nib.load(FLAIR_label)
+            SWI_label_NIFTI = nib.load(SWI_label)
+            merged_label_NIFTI = nib.load(merged_label)
+            brain_mask_NIFTI = nib.load(brain_mask)
+        except Exception as e:
+            print(e)
 
-for i, (FLAIR, SWI, T1, T2, FLAIR_label, SWI_label, merged_label, brain_mask) in enumerate(zip(FLAIR_lines, SWI_lines, T1_lines, T2_lines, labels_FLAIR_lines, labels_SWI_lines, labels_merged_lines, brain_mask_lines)):
-    
-    try:
-        # FLAIR_NIFTI = nib.load(FLAIR)
-        # SWI_NIFTI = nib.load(SWI)
-        # T1_NIFTI = nib.load(T1)
-        # T2_NIFTI = nib.load(T2)
-        FLAIR_label_NIFTI = nib.load(FLAIR_label)
-        SWI_label_NIFTI = nib.load(SWI_label)
-        merged_label_NIFTI = nib.load(merged_label)
-        brain_mask_NIFTI = nib.load(brain_mask)
-    except Exception as e:
-        print(e)
-
-    # print(FLAIR_NIFTI.header)
-
-
-    # FLAIR_arr = np.array(FLAIR_NIFTI.dataobj)
-    # SWI_arr = np.array(SWI_NIFTI.dataobj)
-    # T1_arr = np.array(T1_NIFTI.dataobj)
-    # T2_arr = np.array(T2_NIFTI.dataobj)
-    FLAIR_label_arr = np.array(FLAIR_label_NIFTI.dataobj)
-    SWI_label_arr = np.array(SWI_label_NIFTI.dataobj)
-    merged_label_arr = np.array(merged_label_NIFTI.dataobj)
-    brain_mask_arr = np.array(brain_mask_NIFTI.dataobj)
-
-    # FLAIR_skullstripped = skullstrip_on_mask(FLAIR_arr, brain_mask_arr)
-    # SWI_skullstripped = skullstrip_on_mask(SWI_arr, brain_mask_arr)
-    # T1_skullstripped = skullstrip_on_mask(T1_arr, brain_mask_arr)
-    # T2_skullstripped = skullstrip_on_mask(T2_arr, brain_mask_arr)
-
-    # FLAIR_normed = normalise(FLAIR_skullstripped, brain_mask_arr)
-    # SWI_normed = normalise(SWI_skullstripped, brain_mask_arr)
-    # T1_normed = normalise(T1_skullstripped, brain_mask_arr)
-    # T2_normed = normalise(T2_skullstripped, brain_mask_arr)
-
-    FLAIR_merged_labels = merge_labels(FLAIR_label_arr)
-    SWI_merged_labels = merge_labels(SWI_label_arr)
-    MERGED_merged_labels = merge_labels(merged_label_arr)
-
-    FLAIR_merged_labels = FLAIR_merged_labels * brain_mask_arr
-    SWI_merged_labels = SWI_merged_labels * brain_mask_arr
-    MERGED_merged_labels = MERGED_merged_labels * brain_mask_arr
-
-    # stacked_modalities = np.stack((FLAIR_normed, T1_normed, T2_normed, SWI_normed))
-    # stacked_modalities = np.transpose(stacked_modalities, (1,2,3,0))
-
-    save_name = create_save_name(FLAIR)
-    
-
-    if i % 2 or check_if_force_train(FLAIR):
-        # put in train folder
-        img_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Images", save_name)
-        FLAIR_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_FLAIR", save_name)
-        SWI_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_SWI", save_name)
-        merged_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged", save_name)    
-    else:
-        # put in test folder
-        img_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Images", save_name)
-        FLAIR_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR", save_name)
-        SWI_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI", save_name)
-        merged_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged", save_name)   
-
-    # save_arr_to_nifti(stacked_modalities, img_save_path, None)
-    save_arr_to_nifti(FLAIR_merged_labels, FLAIR_label_save_path, None)
-    save_arr_to_nifti(SWI_merged_labels, SWI_label_save_path, None)
-    save_arr_to_nifti(MERGED_merged_labels, merged_label_save_path, None)
+        # print(FLAIR_NIFTI.header)
 
 
-    # shutil.copy(FLAIR, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/FLAIR/" + save_name)
-    # shutil.copy(T2, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/T2/" + save_name)
-    # shutil.copy(T1, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/T1/" + save_name)
-    # shutil.copy(SWI, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/SWI/" + save_name)
-    # shutil.copy(FLAIR_label, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Labels_FLAIR/" + save_name)
-    # shutil.copy(SWI_label, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Labels_SWI/" + save_name)
-    # shutil.copy(merged_label, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Labels_Merged/" + save_name)
+        # FLAIR_arr = np.array(FLAIR_NIFTI.dataobj)
+        # SWI_arr = np.array(SWI_NIFTI.dataobj)
+        # T1_arr = np.array(T1_NIFTI.dataobj)
+        # T2_arr = np.array(T2_NIFTI.dataobj)
+        FLAIR_label_arr = np.array(FLAIR_label_NIFTI.dataobj)
+        SWI_label_arr = np.array(SWI_label_NIFTI.dataobj)
+        merged_label_arr = np.array(merged_label_NIFTI.dataobj)
+        brain_mask_arr = np.array(brain_mask_NIFTI.dataobj)
 
+        # FLAIR_skullstripped = skullstrip_on_mask(FLAIR_arr, brain_mask_arr)
+        # SWI_skullstripped = skullstrip_on_mask(SWI_arr, brain_mask_arr)
+        # T1_skullstripped = skullstrip_on_mask(T1_arr, brain_mask_arr)
+        # T2_skullstripped = skullstrip_on_mask(T2_arr, brain_mask_arr)
+
+        # FLAIR_normed = normalise(FLAIR_skullstripped, brain_mask_arr)
+        # SWI_normed = normalise(SWI_skullstripped, brain_mask_arr)
+        # T1_normed = normalise(T1_skullstripped, brain_mask_arr)
+        # T2_normed = normalise(T2_skullstripped, brain_mask_arr)
+
+        FLAIR_merged_labels = merge_labels(FLAIR_label_arr)
+        SWI_merged_labels = merge_labels(SWI_label_arr)
+        MERGED_merged_labels = merge_labels(merged_label_arr)
+
+        FLAIR_merged_labels = FLAIR_merged_labels * brain_mask_arr
+        SWI_merged_labels = SWI_merged_labels * brain_mask_arr
+        MERGED_merged_labels = MERGED_merged_labels * brain_mask_arr
+
+        # stacked_modalities = np.stack((FLAIR_normed, T1_normed, T2_normed, SWI_normed))
+        # stacked_modalities = np.transpose(stacked_modalities, (1,2,3,0))
+
+        save_name = create_save_name(FLAIR)
         
 
+        if i % 2 or check_if_force_train(FLAIR):
+            # put in train folder
+            img_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Images", save_name)
+            FLAIR_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_FLAIR", save_name)
+            SWI_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_SWI", save_name)
+            merged_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged", save_name)    
+        else:
+            # put in test folder
+            img_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Images", save_name)
+            FLAIR_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR", save_name)
+            SWI_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI", save_name)
+            merged_label_save_path = os.path.join("/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged", save_name)   
+
+        # save_arr_to_nifti(stacked_modalities, img_save_path, None)
+        # save_arr_to_nifti(FLAIR_merged_labels, FLAIR_label_save_path, None)
+        # save_arr_to_nifti(SWI_merged_labels, SWI_label_save_path, None)
+        # save_arr_to_nifti(MERGED_merged_labels, merged_label_save_path, None)
 
 
+        # shutil.copy(FLAIR, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/FLAIR/" + save_name)
+        # shutil.copy(T2, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/T2/" + save_name)
+        # shutil.copy(T1, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/T1/" + save_name)
+        # shutil.copy(SWI, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/SWI/" + save_name)
+        # shutil.copy(FLAIR_label, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Labels_FLAIR/" + save_name)
+        # shutil.copy(SWI_label, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Labels_SWI/" + save_name)
+        # shutil.copy(merged_label, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Labels_Merged/" + save_name)
 
+            
+
+
+if __name__ == "__main__":
+    main()
 
 

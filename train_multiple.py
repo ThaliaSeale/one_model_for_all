@@ -2,7 +2,7 @@ import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader, PatchIter, GridPatchDataset
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
-from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop
+from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop, RandCropByPosNegLabel
 from monai.visualize import plot_2d_or_3d_image
 from monai.utils import set_determinism
 import monai.losses as lo
@@ -26,17 +26,34 @@ import sys
 from Nets.UNetv2 import UNetv2
 from monai.networks.nets.unet import UNet
 # from orig_UNet_but_with_avg_pool_res_unit import UNet_avg_pool
-from HEMISv2 import HEMISv2
+from Nets.HEMISv2 import HEMISv2
 from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
 from Nets.theory_UNET import theory_UNET
+import utils
 
 def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, is_TBI = False):
+
+    div = total_train_data_size//current_train_data_size
+    rem = total_train_data_size%current_train_data_size
+
+    train_images = images[:-val_size]
+    train_images = train_images * div + train_images[:rem]
+    train_segs = segs[:-val_size]
+    train_segs = train_segs * div + train_segs[:rem]
+
+
+    # /////////// TODO REMOVE THIS /////////////////
+    # print("USING ONLY FIRST 50 IMAGES!!!!!")
+    train_images = images[:50]
+    train_segs = segs[:50]
+
 
     train_imtrans = Compose(
         [
             EnsureChannelFirst(strict_check=True),
             RandSpatialCrop((cropped_input_size[0], cropped_input_size[1], cropped_input_size[2]), random_size=False),
+            # RandCropByPosNegLabel((cropped_input_size[0], cropped_input_size[1], cropped_input_size[2]),label=train_segs),
             RandRotate90(prob=0.1, spatial_axes=(0, 2)),
         ]
     )
@@ -50,16 +67,9 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
     val_imtrans = Compose([EnsureChannelFirst()])
     val_segtrans = Compose([EnsureChannelFirst()])
 
-    div = total_train_data_size//current_train_data_size
-    rem = total_train_data_size%current_train_data_size
-
-    train_images = images[:-val_size]
-    train_images = train_images * div + train_images[:rem]
-    train_segs = segs[:-val_size]
-    train_segs = train_segs * div + train_segs[:rem]
 
     # create a training data loader
-    train_ds = ImageDataset(train_images, train_segs, transform=train_imtrans, seg_transform=train_segtrans)
+    train_ds = ImageDataset(train_images, train_segs, transform=train_imtrans, seg_transform=train_imtrans)
     train_loader = DataLoader(train_ds, batch_size=train_batch_size, shuffle=True, num_workers=workers, pin_memory=0)
     # train_loader = DataLoader(train_ds, batch_size=4, shuffle=True, num_workers=workers)
     # create a validation data loader
@@ -119,11 +129,11 @@ if __name__ == "__main__":
     model_type = str(sys.argv[8])
     augment_modalities = bool(int(sys.argv[9]))
 
-    # device_id = 1
+    # device_id = 0
     # epochs = 1000
     # save_name = "DELETE"
     # # modalities = "0123"
-    # dataset = "TBI"
+    # dataset = "WMH"
     # randomly_drop = 0
     # BRATS_two_channel_seg = 0
     # lr_lower_lim = 1e-5
@@ -137,34 +147,48 @@ if __name__ == "__main__":
     cropped_input_size = [128,128,128]
     val_interval = 2
     lr = 1e-3
-    print("lr: ",lr)
+    crop_on_label = False
 
+    print("lr: ",lr)
     print("Workers: ", workers)
     print("Batch size: ", train_batch_size)
     print("2 channel seg: ", int(BRATS_two_channel_seg))
     print("Augment modalities?: ", augment_modalities)
+    print("RANDOMLY DROP? ",randomly_drop)
+
+    if crop_on_label:
+        print("CROPPING ON LABEL")
+        img_index = 'image'
+        label_index = 'label'
+    else:
+        print("CROPPING RANDOMLY")
+        img_index = 0
+        label_index = 1
 
     total_size_BRATS = 484
     total_size_ATLAS = 654
     total_size_MSSEG = 53
     total_size_ISLES = 28
     total_size_TBI = 281
+    total_size_WMH = 60
 
     train_size_BRATS = 444
     train_size_ATLAS = 459
     train_size_MSSEG = 37
     train_size_ISLES = 20
     train_size_TBI = 156
+    train_size_WMH = 42
 
     channels_BRATS = ["FLAIR", "T1", "T1c", "T2"]
     channels_ATLAS = ["T1"]
     channels_MSSEG = ["FLAIR","T1","T1c","T2","DP"]
     channels_ISLES = ["FLAIR", "T1", "T2", "DWI"]
     channels_TBI = ["FLAIR", "T1", "T2", "SWI"]
+    channels_WMH = ["FLAIR", "T1"]
 
-    data_size = max(("BRATS" in dataset) * train_size_BRATS, ("ATLAS" in dataset) * train_size_ATLAS, ("MSSEG" in dataset) * train_size_MSSEG, ("ISLES" in dataset) * train_size_ISLES, ("TBI" in dataset) * train_size_TBI)
+    data_size = max(("BRATS" in dataset) * train_size_BRATS, ("ATLAS" in dataset) * train_size_ATLAS, ("MSSEG" in dataset) * train_size_MSSEG, ("ISLES" in dataset) * train_size_ISLES, ("TBI" in dataset) * train_size_TBI, ("WMH" in dataset) * train_size_WMH)
     
-    total_modalities = set(("BRATS" in dataset) * channels_BRATS).union(set(("ATLAS" in dataset) * channels_ATLAS)).union(set(("MSSEG" in dataset) * channels_MSSEG)).union(set(("ISLES" in dataset) * channels_ISLES)).union(set(("TBI" in dataset) * channels_TBI))
+    total_modalities = set(("BRATS" in dataset) * channels_BRATS).union(set(("ATLAS" in dataset) * channels_ATLAS)).union(set(("MSSEG" in dataset) * channels_MSSEG)).union(set(("ISLES" in dataset) * channels_ISLES)).union(set(("TBI" in dataset) * channels_TBI)).union(set(("WMH" in dataset) * channels_WMH))
     total_modalities = sorted(list(total_modalities))
     
 
@@ -181,6 +205,8 @@ if __name__ == "__main__":
     MSSEG_channel_map = map_channels(channels_MSSEG, total_modalities)
     ISLES_channel_map = map_channels(channels_ISLES, total_modalities)
     TBI_channel_map = map_channels(channels_TBI, total_modalities)
+    WMH_channel_map = map_channels(channels_WMH, total_modalities)
+
 
     # ////////CHANGE THIS /////////////
     # /////////////////////////////////////////
@@ -198,8 +224,8 @@ if __name__ == "__main__":
     # /////////////////////////////////////////
     # /////////////////////////////////////////
     # /////////////////////////////////////////
-    # print("MANUALLY SETTING ISLES CHANNEL MAP")
-    # MSSEG_channel_map = [1,2,3,4,0]
+    # print("TODO MANUALLY SETTING TBI CHANNEL MAP")
+    # TBI_channel_map = [1,2,4,3]
     # total_modalities = ['DWI', 'FLAIR', 'T1', 'T1c', 'T2']
     
     print("Total modalities: ", total_modalities)
@@ -208,6 +234,7 @@ if __name__ == "__main__":
     print("MSSEG channel map: ", MSSEG_channel_map)
     print("ISLES channel map: ", ISLES_channel_map)
     print("TBI channel map: ", TBI_channel_map)
+    print("WMH channel map: ", WMH_channel_map)
 
     
     train_loaders = []
@@ -229,7 +256,10 @@ if __name__ == "__main__":
         images = sorted(glob(os.path.join(img_path, "BRATS*_normed_on_mask.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "BRATS*merged.nii.gz")))
 
-        train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
+        if crop_on_label:
+            train_loader_BRATS, val_loader_BRATS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
+        else:   
+            train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
         
         data_loader_map["BRATS"] = len(train_loaders)
         train_loaders.append(train_loader_BRATS)
@@ -244,7 +274,10 @@ if __name__ == "__main__":
         images = sorted(glob(os.path.join(img_path_ATLAS, "*_normed.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path_ATLAS, "*_label_trimmed.nii.gz")))
 
-        train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
+        if crop_on_label:
+            train_loader_ATLAS, val_loader_ATLAS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
+        else:
+            train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
 
         data_loader_map["ATLAS"] = len(train_loaders)
         train_loaders.append(train_loader_ATLAS)
@@ -259,7 +292,10 @@ if __name__ == "__main__":
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
-        train_loader_MSSEG, val_loader_MSSEG = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size)
+        if crop_on_label:
+            train_loader_MSSEG, val_loader_MSSEG = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size)
+        else:
+            train_loader_MSSEG, val_loader_MSSEG = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size)
 
         data_loader_map["MSSEG"] = len(train_loaders)
         train_loaders.append(train_loader_MSSEG)
@@ -274,7 +310,10 @@ if __name__ == "__main__":
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
-        train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
+        if crop_on_label:
+            train_loader_ISLES, val_loader_ISLES = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
+        else:
+            train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
 
         data_loader_map["ISLES"] = len(train_loaders)
         train_loaders.append(train_loader_ISLES)
@@ -303,11 +342,43 @@ if __name__ == "__main__":
         images = sorted(glob(os.path.join(train_img_path, "*.nii.gz"))) + sorted(glob(os.path.join(val_img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(train_seg_path, "*.nii.gz"))) + sorted(glob(os.path.join(val_seg_path, "*.nii.gz")))
 
-        train_loader_TBI, val_loader_TBI = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
+        if crop_on_label:
+            train_loader_TBI, val_loader_TBI = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
+        else:
+            train_loader_TBI, val_loader_TBI = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
+
 
         data_loader_map["TBI"] = len(train_loaders)
         train_loaders.append(train_loader_TBI)
         val_loaders.append(val_loader_TBI)
+
+    if "WMH" in dataset:
+        print("Training WMH")
+        val_size = total_size_WMH-train_size_WMH
+
+        img_path = "/home/sedm6251/projectMaterial/datasets/WMH/Images"
+        seg_path = "/home/sedm6251/projectMaterial/datasets/WMH/Segs"
+        images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
+        segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
+
+        if crop_on_label:
+            train_loader_WMH, val_loader_WMH = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
+        else:
+            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
+
+        data_loader_map["WMH"] = len(train_loaders)
+        train_loaders.append(train_loader_WMH)
+        val_loaders.append(val_loader_WMH)
+
+
+
+    # ////////////////// TODO REMOVE THIS  ////////////
+    data_size = 50
+
+
+
+
+
 
     print("Running on GPU:" + str(device_id))
     print("Running for epochs:" + str(epochs))
@@ -333,26 +404,25 @@ if __name__ == "__main__":
 
     if model_type == "UNET":
         print("TRAINING WITH UNET")
-        # model = UNetv2(
-        #     spatial_dims=3,
-        #     in_channels=len(total_modalities),
-        #     out_channels=1,
-        #     kernel_size = (3,3,3),
-        #     channels=(16, 32, 64, 128, 256),
-        #     strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
-        #     num_res_units=2,
-        #     dropout=0.2,
-        # ).to(device)
-        print("training with theoretical unet")
-        model = theory_UNET(in_channels=len(total_modalities)).to(device)
+        model = UNetv2(
+            spatial_dims=3,
+            in_channels=len(total_modalities),
+            out_channels=1,
+            kernel_size = (3,3,3),
+            channels=(16, 32, 64, 128, 256),
+            strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
+            num_res_units=2,
+            dropout=0.2,
+        ).to(device)
+        # print("training with theoretical unet")
+        # model = theory_UNET(in_channels=len(total_modalities)).to(device)
 
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/UNET/RAND/UNetv2_BRATS_ATLAS_ISLES_RAND_BEST_ATLAS.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
         # print("LOADING MODEL: ", load_model_path)
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
-
     elif model_type == "HEMIS_spatial_attention":
         print("TRAINING WITH HEMIS SPATIAL ATTENTION")
         # model = HEMISv2(
@@ -373,17 +443,17 @@ if __name__ == "__main__":
             fusion_type="spatial attention",
             UNet_outs=12,
             conv1_in=12,
-            conv1_out=8,
-            conv2_in=8,
-            conv2_out=8,
-            conv3_in=8,
+            conv1_out=12,
+            conv2_in=12,
+            conv2_out=12,
+            conv3_in=12,
             pred_uncertainty=False,
-            grid_UNet=False,
+            grid_UNet=True,
         ).to(device)
 
         #///////////////////////////////////////////////////
         #///////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/HEM/HEM_ATLAS_ALL_BATCH_3_Epoch_499.pth"
         # print("LOADING MODEL: ", load_model_path)
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFN":
@@ -393,7 +463,9 @@ if __name__ == "__main__":
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFNP":
         model = MSFN(paired=True).to(device)
-
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth"
+        # print("LOADING MODEL: ", load_model_path)
+        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
 
     # model_path = "/home/sedm6251/projectMaterial/baseline_models/BRATS_Decathlon_2016_17/Single_Unet_modality_1_T1w_brain_mask_normed.pth"
     # model.load_state_dict(torch.load(model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
@@ -414,24 +486,17 @@ if __name__ == "__main__":
     best_metric_MSSEG = -1
     best_metric_ISLES = -1
     best_metric_TBI = -1
-
+    best_metric_WMH = -1
 
     best_metric_epoch_BRATS = -1
     best_metric_epoch_ATLAS = -1
     best_metric_epoch_MSSEG = -1
     best_metric_epoch_ISLES = -1
     best_metric_epoch_TBI = -1
+    best_metric_epoch_WMH = -1
 
-    # epoch_loss_values = list()
+
     metric_values = list()
-    # if dataset == "BRATS":
-    #     log_save = "/home/sedm6251/projectMaterial/baseline_models/BRATS_Decathlon_2016_17/runs/" + save_name
-    # elif dataset == "ATLAS":
-    #     log_save = "/home/sedm6251/projectMaterial/baseline_models/ATLAS/runs/" + save_name
-    # elif dataset == "MSSEG":
-    #     log_save = "/home/sedm6251/projectMaterial/baseline_models/MSSEG/runs/" + save_name
-    # elif dataset == "ISLES":
-    #     log_save = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/runs/" + save_name
     log_save = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/runs/" + save_name
     model_save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/"
 
@@ -443,9 +508,9 @@ if __name__ == "__main__":
         epoch_loss = 0
         step = 0
 
-        if epoch == 150:
-            for g in optimizer.param_groups:
-                g['lr'] = 1e-4
+        # if epoch == 150:
+        #     for g in optimizer.param_groups:
+        #         g['lr'] = 1e-4
 
         for batch_data in zip(*train_loaders):
  
@@ -465,7 +530,7 @@ if __name__ == "__main__":
                 if model_type == "UNET":
 
                     if randomly_drop:
-                        modalities_remaining, batch[0] = rand_set_channels_to_zero(channels_BRATS, batch[0])
+                        modalities_remaining, batch[img_index] = rand_set_channels_to_zero(channels_BRATS, batch[img_index])
 
                         # this part is only relevant for BRATS when doing 2 channel segmentation
                         if (0 not in modalities_remaining) and (3 not in modalities_remaining):
@@ -474,18 +539,18 @@ if __name__ == "__main__":
                         else:
                             seg_channel = 0
                         if BRATS_two_channel_seg:
-                            label = batch[1][:,[seg_channel],:,:,:].to(device)
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
                         else:
-                            label = batch[1].to(device)
+                            label = batch[label_index].to(device)
                     else:
-                        label = batch[1].to(device)
+                        label = batch[label_index].to(device)
                     
-                    input_data = torch.from_numpy(np.zeros((batch[0].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
-                    input_data[:,BRATS_channel_map,:,:,:] = batch[0]
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,BRATS_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
                 else:
                     if randomly_drop:
-                        modalities_remaining, batch[0] = remove_random_channels(channels_BRATS, batch[0])
+                        modalities_remaining, batch[img_index] = remove_random_channels(channels_BRATS, batch[img_index])
 
                         # this part is only relevant for BRATS when doing 2 channel segmentation
                         if (0 not in modalities_remaining) and (3 not in modalities_remaining):
@@ -494,36 +559,35 @@ if __name__ == "__main__":
                         else:
                             seg_channel = 0
                         if BRATS_two_channel_seg:
-                            label = batch[1][:,[seg_channel],:,:,:].to(device)
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
                         else:
-                            label = batch[1].to(device)
+                            label = batch[label_index].to(device)
                     else:
-                        label = batch[1].to(device)
+                        label = batch[label_index].to(device)
                     
                     if augment_modalities:
-                        if batch[0].shape[1] > 1:
+                        if batch[img_index].shape[label_index] > 1:
                             should_create_modality = bool(random.randint(0,1)) 
                             if should_create_modality:
-                                batch[0] = augment(batch[0])
+                                batch[img_index] = augment(batch[img_index])
 
-                    input_data = batch[0].to(device)
+                    input_data = batch[img_index].to(device)
                 
                 out = model(input_data)
                 outputs.append(out)
                 labels.append(label)
                 
-
             if "ATLAS" in dataset:
                 loader_index = data_loader_map["ATLAS"]
                 batch = batch_data[loader_index]
 
                 if model_type == "UNET":
-                    input_data = torch.from_numpy(np.zeros((batch[0].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
-                    input_data[:,ATLAS_channel_map,:,:,:] = batch[0]
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,ATLAS_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
                 else:
-                    input_data = batch[0].to(device)
-                label = batch[1].to(device)
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
                 out = model(input_data)
                 outputs.append(out)
                 labels.append(label)
@@ -534,24 +598,24 @@ if __name__ == "__main__":
 
                 if model_type == "UNET":
                     if randomly_drop:
-                        _, batch[0] = rand_set_channels_to_zero(channels_MSSEG, batch[0])
+                        _, batch[img_index] = rand_set_channels_to_zero(channels_MSSEG, batch[img_index])
 
-                    input_data = torch.from_numpy(np.zeros((batch[0].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
-                    input_data[:,MSSEG_channel_map,:,:,:] = batch[0]
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,MSSEG_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
                 else:
                     if randomly_drop:
-                        _, batch[0] = remove_random_channels(channels_MSSEG, batch[0])
+                        _, batch[img_index] = remove_random_channels(channels_MSSEG, batch[img_index])
 
                     if augment_modalities:
-                        if batch[0].shape[1] > 1:
+                        if batch[img_index].shape[1] > 1:
                             should_create_modality = bool(random.randint(0,1))
                             if should_create_modality:
-                                batch[0] = augment(batch[0])
+                                batch[img_index] = augment(batch[img_index])
                         
 
-                    input_data = batch[0].to(device)
-                label = batch[1].to(device)
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
                 out = model(input_data)
                 outputs.append(out)
                 labels.append(label)
@@ -568,20 +632,20 @@ if __name__ == "__main__":
 
                 if model_type == "UNET":
                     if randomly_drop:
-                        _, batch[0] = rand_set_channels_to_zero(channels_ISLES, batch[0])                    
-                    input_data = torch.from_numpy(np.zeros((batch[0].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
-                    input_data[:,ISLES_channel_map,:,:,:] = batch[0]
+                        _, batch[img_index] = rand_set_channels_to_zero(channels_ISLES, batch[img_index])                    
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,ISLES_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
                 else:
                     if randomly_drop:
-                        _, batch[0] = remove_random_channels(channels_ISLES, batch[0])
+                        _, batch[img_index] = remove_random_channels(channels_ISLES, batch[img_index])
                     if augment_modalities:
-                        if batch[0].shape[1] > 1:
+                        if batch[img_index].shape[1] > 1:
                             should_create_modality = bool(random.randint(0,1))
                             if should_create_modality:
-                                batch[0] = augment(batch[0])
-                    input_data = batch[0].to(device)
-                label = batch[1].to(device)
+                                batch[img_index] = augment(batch[img_index])
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
                 out = model(input_data)
                 outputs.append(out)
                 labels.append(label)
@@ -592,23 +656,51 @@ if __name__ == "__main__":
 
                 if model_type == "UNET":
                     if randomly_drop:
-                        _, batch[0] = rand_set_channels_to_zero(channels_TBI, batch[0])                    
-                    input_data = torch.from_numpy(np.zeros((batch[0].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
-                    input_data[:,TBI_channel_map,:,:,:] = batch[0]
+                        _, batch[img_index] = rand_set_channels_to_zero(channels_TBI, batch[img_index])                    
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,TBI_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
                 else:
                     if randomly_drop:
-                        _, batch[0] = remove_random_channels(channels_TBI, batch[0])
+                        _, batch[img_index] = remove_random_channels(channels_TBI, batch[img_index])
                     if augment_modalities:
-                        if batch[0].shape[1] > 1:
+                        if batch[img_index].shape[1] > 1:
                             should_create_modality = bool(random.randint(0,1))
                             if should_create_modality:
-                                batch[0] = augment(batch[0])
-                    input_data = batch[0].to(device)
-                label = batch[1].to(device)
+                                batch[img_index] = augment(batch[img_index])
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
                 out = model(input_data)
+                # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
                 outputs.append(out)
                 labels.append(label)
+
+            if "WMH" in dataset:
+                loader_index = data_loader_map["WMH"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+                    if randomly_drop:
+                        _, batch[img_index] = rand_set_channels_to_zero(channels_WMH, batch[img_index])                    
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,WMH_channel_map,:,:,:] = batch[img_index]
+                    input_data = input_data.to(device)
+                else:
+                    if randomly_drop:
+                        _, batch[img_index] = remove_random_channels(channels_WMH, batch[img_index])
+                    if augment_modalities:
+                        if batch[img_index].shape[1] > 1:
+                            should_create_modality = bool(random.randint(0,1))
+                            if should_create_modality:
+                                batch[img_index] = augment(batch[img_index])
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
+                out = model(input_data)
+                # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
+                outputs.append(out)
+                labels.append(label)
+
+
 
             # print(inputs.shape)
             # print(batch_data[0][:,[0,2],:,:].shape)
@@ -686,8 +778,6 @@ if __name__ == "__main__":
                     )
                     writer.add_scalar("val_mean_dice_BRATS", metric_BRATS, epoch_len * (epoch+1))
                     
-
-
                 if "ATLAS" in dataset:
 
                     loader_index = data_loader_map["ATLAS"]
@@ -836,9 +926,49 @@ if __name__ == "__main__":
                     )
                     writer.add_scalar("val_mean_dice_TBI", metric_TBI, epoch_len * (epoch+1))
 
+                if "WMH" in dataset:
+
+                    loader_index = data_loader_map["WMH"]
+                    for val_data in val_loader_WMH:
+                        # batch = val_data[loader_index]
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,WMH_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
+                        label = val_data[1].to(device)
+                        
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_WMH = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
+
+                    if metric_WMH > best_metric_WMH:
+                        best_metric_WMH = metric_WMH
+                        best_metric_epoch_WMH = epoch + 1
+                        if epoch>150:
+                            model_save_name = model_save_path + save_name + "_BEST_WMH.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model")
+                    print(
+                        "current epoch: {} current mean dice WMH: {:.4f} best mean dice WMH: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_WMH, best_metric_WMH, best_metric_epoch_WMH
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_WMH", metric_WMH, epoch_len * (epoch+1))
+
                 
+
                 # scheduler.step(metric,epoch=epoch)
                 writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * (epoch+1))
+
+
 
 
     # print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")

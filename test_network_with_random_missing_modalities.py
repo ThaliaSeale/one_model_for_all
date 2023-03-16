@@ -16,7 +16,7 @@ from itertools import combinations
 import sys
 from HEMIS_Nets_Legacy import hemis_style_net as hemNet
 from HEMIS_Nets_Legacy import hemis_style_res_units_after_fusion as hemNet2
-from HEMISv2 import HEMISv2 
+from Nets.HEMISv2 import HEMISv2 
 from Nets.UNetv2 import UNetv2
 from Nets.multi_scale_fusion_net import MSFN
 import nibabel as nib
