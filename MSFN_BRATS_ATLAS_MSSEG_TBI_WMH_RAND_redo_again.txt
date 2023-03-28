@@ -1,0 +1,139 @@
+nohup: ignoring input
+MONAI version: 1.1.dev2241
+Numpy version: 1.23.3
+Pytorch version: 1.14.0.dev20221012+cu117
+MONAI flags: HAS_EXT = False, USE_COMPILED = False, USE_META_DICT = False
+MONAI rev id: 3aec844d8fb56a9a9be2c945ae581e59edd0c8f7
+MONAI __file__: /home/sedm6251/.local/lib/python3.8/site-packages/monai/__init__.py
+
+Optional dependencies:
+Pytorch Ignite version: NOT INSTALLED or UNKNOWN VERSION.
+Nibabel version: 4.0.2
+scikit-image version: NOT INSTALLED or UNKNOWN VERSION.
+Pillow version: 7.0.0
+Tensorboard version: 2.10.1
+gdown version: 4.5.1
+TorchVision version: 0.15.0.dev20221012+cu117
+tqdm version: 4.64.1
+lmdb version: NOT INSTALLED or UNKNOWN VERSION.
+psutil version: 5.9.2
+pandas version: 1.5.1
+einops version: NOT INSTALLED or UNKNOWN VERSION.
+transformers version: NOT INSTALLED or UNKNOWN VERSION.
+mlflow version: NOT INSTALLED or UNKNOWN VERSION.
+pynrrd version: NOT INSTALLED or UNKNOWN VERSION.
+
+For details about installing the optional dependencies, please visit:
+    https://docs.monai.io/en/latest/installation.html#installing-the-recommended-dependencies
+
+N foreground 0, N  background 1219914,unable to generate class balanced samples.
+original_setup.py
+USING BRAINMASK NORMED
+determinism seed = 0
+lr lower lim:  1e-05
+lr:  0.001
+Workers:  0
+Batch size:  3
+2 channel seg:  0
+Augment modalities?:  False
+RANDOMLY DROP?  True
+CROPPING ON LABEL
+Total modalities:  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+BRATS channel map:  [1, 3, 4, 5]
+ATLAS channel map:  [3]
+MSSEG channel map:  [1, 3, 4, 5, 0]
+ISLES channel map:  [1, 3, 5]
+TBI channel map:  [1, 3, 5, 2]
+WMH channel map:  [1, 3]
+Training BRATS
+/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_merged_labels_inc_edema
+Training ATLAS
+Training MSSEG
+Training TBI
+/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged
+/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged
+Training WMH
+Running on GPU:0
+Running for epochs:1000
+Layers: 16,32,64,128,256
+Dropout: 0.2
+Dropout:  0.2
+Using spatial attention
+Channels in:  16
+Mid channels:  8
+Out channels:  16
+Using spatial attention
+Channels in:  32
+Mid channels:  16
+Out channels:  32
+Using spatial attention
+Channels in:  64
+Mid channels:  32
+Out channels:  64
+Using spatial attention
+Channels in:  128
+Mid channels:  64
+Out channels:  128
+Using spatial attention
+Channels in:  256
+Mid channels:  128
+Out channels:  256
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+Using avg pool residual path with concat on overlap with convolution path
+in_channels= 6
+batch size =  3
+----------
+epoch 1/1000
+Traceback (most recent call last):
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/transform.py", line 91, in apply_transform
+    return _apply_transform(transform, data, unpack_items)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/transform.py", line 55, in _apply_transform
+    return transform(parameters)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/croppad/dictionary.py", line 861, in __call__
+    self.randomize(label, fg_indices, bg_indices, image)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/croppad/dictionary.py", line 852, in randomize
+    self.cropper.randomize(label=label, fg_indices=fg_indices, bg_indices=bg_indices, image=image)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/croppad/array.py", line 1060, in randomize
+    self.centers = generate_pos_neg_label_crop_centers(
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/utils.py", line 516, in generate_pos_neg_label_crop_centers
+    random_int = rand_state.randint(len(indices_to_use))
+  File "mtrand.pyx", line 748, in numpy.random.mtrand.RandomState.randint
+  File "_bounded_integers.pyx", line 1247, in numpy.random._bounded_integers._rand_int64
+ValueError: high <= 0
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/transform.py", line 91, in apply_transform
+    return _apply_transform(transform, data, unpack_items)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/transform.py", line 55, in _apply_transform
+    return transform(parameters)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/compose.py", line 174, in __call__
+    input_ = apply_transform(_transform, input_, self.map_items, self.unpack_items, self.log_stats)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/transform.py", line 118, in apply_transform
+    raise RuntimeError(f"applying transform {transform}") from e
+RuntimeError: applying transform <monai.transforms.croppad.dictionary.RandCropByPosNegLabeld object at 0x7fa2a63880d0>
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "train_multiple.py", line 515, in <module>
+    for batch_data in zip(*train_loaders):
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 628, in __next__
+    data = self._next_data()
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/torch/utils/data/dataloader.py", line 671, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 58, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/torch/utils/data/_utils/fetch.py", line 58, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/data/dataset.py", line 105, in __getitem__
+    return self._transform(index)
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/data/dataset.py", line 91, in _transform
+    return apply_transform(self.transform, data_i) if self.transform is not None else data_i
+  File "/home/sedm6251/.local/lib/python3.8/site-packages/monai/transforms/transform.py", line 118, in apply_transform
+    raise RuntimeError(f"applying transform {transform}") from e
+RuntimeError: applying transform <monai.transforms.compose.Compose object at 0x7fa2a6388340>

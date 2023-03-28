@@ -200,12 +200,12 @@ def test(model, val_loader, dataset_name, modalities, net, device, modalities_pr
 
     # aggregate the final mean dice result
     metric = dice_metric.aggregate().item()
-    print("DICE Metric:")
+    # print("DICE Metric:")
     print(metric)
-    print("Averge Recall:")
-    print(recall_total/steps)
-    print("Average Jaccard:")
-    print(jaccard_total/steps)
+    # print("Averge Recall:")
+    # print(recall_total/steps)
+    # print("Average Jaccard:")
+    # print(jaccard_total/steps)
 
     # reset the status for next validation round
     dice_metric.reset()

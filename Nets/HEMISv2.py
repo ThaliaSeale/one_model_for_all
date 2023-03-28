@@ -72,7 +72,7 @@ class Spatial_Attention(nn.Module):
             if ind == 0:
                 conv_outs = self.conv(modality)
             elif ind == 1:
-                conv_outs = torch.stack((modality, self.conv(modality)),dim=0)
+                conv_outs = torch.stack((conv_outs, self.conv(modality)),dim=0)
             else:
                 conv_outs = torch.cat((conv_outs, torch.unsqueeze(self.conv(modality),dim=0)),dim=0)
             # conv_outs.append(self.conv(modality))

@@ -307,31 +307,11 @@ class ResidualUnit(nn.Module):
                 rkernel_size = 1
                 rpadding = 0
 
-            # conv_type = Conv[Conv.CONV, self.spatial_dims]
-            # self.residual = nn.Conv3d(in_channels, out_channels, 1, strides, 0, bias=0)
-
-            # T = torch.tensor([[[0.,0.,0.],[0.,0.,0.],[0.,0.,0.]],[[0.,0.,0.],[0.,1.,0.],[0.,0.,0.]],[[0.,0.,0.],[0.,0.,0.],[0.,0.,0.]]],requires_grad=False)
-
-            # print(self.residual.weight.shape)
-            # T = torch.ones_like(self.residual.weight,requires_grad=False)
-            # self.residual.weight = nn.Parameter(T,requires_grad=False)
-
-            # max_type = Pool[Pool.AVG,self.spatial_dims]
-            # self.residual = max_type(rkernel_size, strides, rpadding)
-
             # NOW residual path is just avg pool
             print("Using avg pool residual path with concat on overlap with convolution path")
             self.residual = nn.AvgPool3d(kernel_size=rkernel_size,stride=strides,padding=rpadding,)
 
-            # if self.in_channels > self.out_channels:
-            #     self.residual = nn.Conv3d(in_channels,out_channels,1,1,padding=rpadding)
-                # T = torch.ones_like(self.residual.weight,requires_grad=False)
-                # T = nn.Identity()
-                # self.residual.weight = nn.Parameter(T,requires_grad=False)
 
-            # print("Using Standard MONAI residual unit method with a convolution on the residual path")
-            # conv_type = Conv[Conv.CONV, self.spatial_dims]
-            # self.residual = conv_type(in_channels, out_channels, rkernel_size, strides, rpadding, bias=bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         res: torch.Tensor = self.residual(x)  # create the additive residual from x

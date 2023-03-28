@@ -43,7 +43,7 @@ def create_dataset(dataset):
     segs = sorted(glob(os.path.join(seg_path, "*_label_trimmed.nii.gz")))
     val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
   elif dataset == "ISLES2015":
-    val_size = 28
+    val_size = 8
     img_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/images"
     seg_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/labels"
     images = sorted(glob(os.path.join(img_path, "*_image.nii.gz")))
@@ -60,15 +60,19 @@ def create_dataset(dataset):
     val_size = 125
     img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Images"
     #CHANGE THIS DEPENDING ON WHICH SEGS TO USE
+    # print("USING TBI NOT MERGED LABELS")
     # seg_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR"
     # seg_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI"
     seg_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged"
-
-
-
     images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
     segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
- 
+    val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
+  elif dataset == "WMH":
+    val_size = 18
+    img_path = "/home/sedm6251/projectMaterial/datasets/WMH/Images"
+    seg_path = "/home/sedm6251/projectMaterial/datasets/WMH/Segs"
+    images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
+    segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
     val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
 
   
@@ -103,6 +107,10 @@ def create_net(net, device,cuda_id):
       num_res_units=2,
       dropout=0.2,
     ).to(device)
+
+    # model = theory_UNET(in_channels=net.modalities_trained_on,
+    #                     out_channels=1).to(device)
+
     model.load_state_dict(torch.load(net.file_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     model.eval()
   elif net.net_type == "Theory UNET":
@@ -213,7 +221,6 @@ def create_UNET_input(val_data, modalities, dataset_name, net, modalities_presen
   return input_data
 
 
-
 def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, is_TBI = False):
 
     div = total_train_data_size//current_train_data_size
@@ -243,7 +250,7 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
               keys=["image", "label"],
               label_key="label",
               spatial_size=(128, 128, 128),
-              pos=10,
+              pos=1,
               neg=1,
               num_samples=1,
               image_key="image",

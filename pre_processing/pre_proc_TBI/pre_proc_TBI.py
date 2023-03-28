@@ -231,8 +231,10 @@ def main():
 
         # save_arr_to_nifti(stacked_modalities, img_save_path, None)
         # save_arr_to_nifti(FLAIR_merged_labels, FLAIR_label_save_path, None)
-        # save_arr_to_nifti(SWI_merged_labels, SWI_label_save_path, None)
-        # save_arr_to_nifti(MERGED_merged_labels, merged_label_save_path, None)
+        if save_name == "CENTER-TBI-2020-6_Sub-136-7Qkf235_Site-06-a72b20.nii.gz":
+            save_arr_to_nifti(SWI_merged_labels, SWI_label_save_path, None)
+            save_arr_to_nifti(FLAIR_merged_labels, FLAIR_label_save_path, None)
+            save_arr_to_nifti(MERGED_merged_labels, merged_label_save_path, None)
 
 
         # shutil.copy(FLAIR, "/home/sedm6251/projectMaterial/datasets/TBI/orig/Images/FLAIR/" + save_name)

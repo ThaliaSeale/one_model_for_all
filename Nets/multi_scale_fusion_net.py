@@ -15,6 +15,7 @@ from itertools import combinations
 import random
 
 
+
 class Channel_Attention(nn.Module):
     def __init__(self,
     ) -> None:
@@ -55,13 +56,17 @@ class Spatial_Attention(nn.Module):
 
     def save_imgs(self, img: torch.Tensor, name: str):
         # for i in range(img.shape[2]):
+        if img.shape[2] != 16:
+            return
         for i in range(img.shape[2]):
             # modality, batch, channel, 128,128,128
             outputs_numpy = img[:,:,i,:,:,:].cpu().detach().numpy()
             outputs_numpy = np.squeeze(outputs_numpy)
             outputs_numpy = np.transpose(outputs_numpy,(1,2,3,0))
             new_image = nib.Nifti1Image(outputs_numpy,affine=None)
-            save_path = "/home/sedm6251/spatial_att_outs/" + name + "_chan_" + str(i) + ".nii.gz"
+            sform = np.diag([1, 1, 1, 1])
+            new_image.header.set_sform(sform)
+            save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/Test_ISLES/TRAINED_ALL_PSEUDO/MSFN/attention_masks/" + name + "_chan_" + str(i) + ".nii.gz"
             nib.save(new_image, save_path)
 
 
@@ -73,7 +78,7 @@ class Spatial_Attention(nn.Module):
             if ind == 0:
                 conv_outs = self.conv(modality)
             elif ind == 1:
-                conv_outs = torch.stack((modality, self.conv(modality)),dim=0)
+                conv_outs = torch.stack((conv_outs, self.conv(modality)),dim=0)
             else:
                 conv_outs = torch.cat((conv_outs, torch.unsqueeze(self.conv(modality),dim=0)),dim=0)
             # conv_outs.append(self.conv(modality))
@@ -83,10 +88,15 @@ class Spatial_Attention(nn.Module):
         # conv_outs = conv_outs.view
         if len(modalities) != 1:
             conv_outs = self.softmax(conv_outs)
+        else:
+            conv_outs = torch.ones_like(x)
+
+        # for i in range(len(modalities)):
+        #     avg_value = torch.mean(conv_outs)
         
         # s = torch.sum(conv_outs,dim=0)
         # conv_outs = torch.div(conv_outs, s)
-
+        
         # self.save_imgs(x, "orig")
         # self.save_imgs(conv_outs, "attention_mask")
 

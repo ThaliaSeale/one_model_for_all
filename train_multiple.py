@@ -45,8 +45,8 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
 
     # /////////// TODO REMOVE THIS /////////////////
     # print("USING ONLY FIRST 50 IMAGES!!!!!")
-    train_images = images[:50]
-    train_segs = segs[:50]
+    # train_images = images[:50]
+    # train_segs = segs[:50]
 
 
     train_imtrans = Compose(
@@ -128,26 +128,28 @@ if __name__ == "__main__":
     lr_lower_lim = float(sys.argv[7])
     model_type = str(sys.argv[8])
     augment_modalities = bool(int(sys.argv[9]))
+    is_cluster = bool(int(sys.argv[10]))
 
-    # device_id = 0
+    # device_id = 1
     # epochs = 1000
     # save_name = "DELETE"
     # # modalities = "0123"
-    # dataset = "WMH"
-    # randomly_drop = 0
-    # BRATS_two_channel_seg = 0
+    # dataset = "BRATS_TBI"
+    # randomly_drop = 1
+    # BRATS_two_channel_seg = 1
     # lr_lower_lim = 1e-5
-    # model_type = "UNET"
+    # model_type = "MSFN"
     # augment_modalities = False
 
     print("lr lower lim: ", lr_lower_lim)
 
-    workers = 2
-    train_batch_size = 3
+    workers = 0
+    train_batch_size = 1
     cropped_input_size = [128,128,128]
-    val_interval = 2
+    val_interval = 4
     lr = 1e-3
     crop_on_label = False
+    TBI_multi_channel_seg = True
 
     print("lr: ",lr)
     print("Workers: ", workers)
@@ -245,11 +247,18 @@ if __name__ == "__main__":
         print("Training BRATS")
         val_size = total_size_BRATS-train_size_BRATS
 
-        img_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_Normalised_with_brainmask/normed"
-        if BRATS_two_channel_seg:
-            seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/two_channel_labels"
+        if is_cluster:
+            img_path = "/data/sedm6251/BRATS/BRATS_Normalised_with_brainmask/normed"
+            if BRATS_two_channel_seg:
+                seg_path = "/data/sedm6251/BRATS/two_channel_labels"
+            else:
+                seg_path = "/data/sedm6251/BRATS/BRATS_merged_labels_inc_edema"
         else:
-            seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_merged_labels_inc_edema"
+            img_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_Normalised_with_brainmask/normed"
+            if BRATS_two_channel_seg:
+                seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/two_channel_labels"
+            else:
+                seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_merged_labels_inc_edema"
 
         print(seg_path)
 
@@ -268,9 +277,12 @@ if __name__ == "__main__":
     if "ATLAS" in dataset:
         print("Training ATLAS")
         val_size = total_size_ATLAS-train_size_ATLAS
-
-        img_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/normed_images"
-        seg_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/trimmed_labels_ints"
+        if is_cluster:
+            img_path_ATLAS = "/data/sedm6251/ATLAS/normed_images"
+            seg_path_ATLAS = "/data/sedm6251/ATLAS/trimmed_labels_ints"
+        else:
+            img_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/normed_images"
+            seg_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/trimmed_labels_ints"
         images = sorted(glob(os.path.join(img_path_ATLAS, "*_normed.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path_ATLAS, "*_label_trimmed.nii.gz")))
 
@@ -287,8 +299,12 @@ if __name__ == "__main__":
         print("Training MSSEG")
         val_size = total_size_MSSEG-train_size_MSSEG
 
-        img_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Normed"
-        seg_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Labels"
+        if is_cluster:
+            img_path = "/data/sedm6251/MSSEG/Normed"
+            seg_path = "/data/sedm6251/MSSEG/Labels"
+        else:
+            img_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Normed"
+            seg_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Labels"
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
@@ -305,8 +321,12 @@ if __name__ == "__main__":
         print("Training ISLES")
         val_size = total_size_ISLES-train_size_ISLES
 
-        img_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/images"
-        seg_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/labels"
+        if is_cluster:
+            img_path = "/data/sedm6251/ISLES/images"
+            seg_path = "/data/sedm6251/ISLES/labels"
+        else:
+            img_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/images"
+            seg_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/labels"
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
@@ -323,21 +343,51 @@ if __name__ == "__main__":
         print("Training TBI")
         val_size = total_size_TBI-train_size_TBI
 
-        train_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Images"
-        train_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_FLAIR"
-        train_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_SWI"
-        train_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged"
+        if is_cluster:
+            train_img_path = "/data/sedm6251/TBI/Train/Images"
+            train_seg_path_FLAIR = "/data/sedm6251/TBI/Train/Labels_FLAIR"
+            train_seg_path_SWI = "/data/sedm6251/TBI/Train/Labels_SWI"
+            train_seg_path_Merged = "/data/sedm6251/TBI/Train/Labels_Merged"
 
-        val_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Images"
-        val_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR"
-        val_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI"
-        val_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged"
+            val_img_path = "/data/sedm6251/TBI/Test/Images"
+            val_seg_path_FLAIR = "/data/sedm6251/TBI/Test/Labels_FLAIR"
+            val_seg_path_SWI = "/data/sedm6251/TBI/Test/Labels_SWI"
+            val_seg_path_Merged = "/data/sedm6251/TBI/Test/Labels_Merged"
 
-        # ///////////// CHANGE THIS TO CHANGE WHICH SEGMENTATION IS USED //////////////
-        train_seg_path = train_seg_path_Merged
-        val_seg_path = val_seg_path_Merged
-        print(train_seg_path)
-        print(val_seg_path)
+            # ///////////// CHANGE THIS TO CHANGE WHICH SEGMENTATION IS USED //////////////
+            
+            if TBI_multi_channel_seg:
+                train_seg_path = "/data/sedm6251/TBI/Train/Labels_Multichannel"
+                val_seg_path = "/data/sedm6251/TBI/Test/Labels_Multichannel"
+            else:
+                train_seg_path = train_seg_path_Merged
+                val_seg_path = val_seg_path_Merged
+            print(train_seg_path)
+            print(val_seg_path)
+        else:
+            train_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Images"
+            train_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_FLAIR"
+            train_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_SWI"
+            train_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged"
+
+            val_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Images"
+            val_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR"
+            val_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI"
+            val_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged"
+
+            # ///////////// CHANGE THIS TO CHANGE WHICH SEGMENTATION IS USED //////////////
+            
+            if TBI_multi_channel_seg:
+                train_seg_path = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Multichannel"
+                val_seg_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Multichannel"
+            else:
+                train_seg_path = train_seg_path_Merged
+                val_seg_path = val_seg_path_Merged
+            print(train_seg_path)
+            print(val_seg_path)
+
+        
+
 
         images = sorted(glob(os.path.join(train_img_path, "*.nii.gz"))) + sorted(glob(os.path.join(val_img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(train_seg_path, "*.nii.gz"))) + sorted(glob(os.path.join(val_seg_path, "*.nii.gz")))
@@ -356,8 +406,13 @@ if __name__ == "__main__":
         print("Training WMH")
         val_size = total_size_WMH-train_size_WMH
 
-        img_path = "/home/sedm6251/projectMaterial/datasets/WMH/Images"
-        seg_path = "/home/sedm6251/projectMaterial/datasets/WMH/Segs"
+        if is_cluster:
+            img_path = "/data/sedm6251/WMH/Images"
+            seg_path = "/data/sedm6251/WMH/Segs"
+        else:
+            img_path = "/home/sedm6251/projectMaterial/datasets/WMH/Images"
+            seg_path = "/home/sedm6251/projectMaterial/datasets/WMH/Segs"
+            
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
@@ -373,7 +428,7 @@ if __name__ == "__main__":
 
 
     # ////////////////// TODO REMOVE THIS  ////////////
-    data_size = 50
+    # data_size = 50
 
 
 
@@ -404,18 +459,18 @@ if __name__ == "__main__":
 
     if model_type == "UNET":
         print("TRAINING WITH UNET")
-        model = UNetv2(
-            spatial_dims=3,
-            in_channels=len(total_modalities),
-            out_channels=1,
-            kernel_size = (3,3,3),
-            channels=(16, 32, 64, 128, 256),
-            strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
-            num_res_units=2,
-            dropout=0.2,
-        ).to(device)
+        # model = UNetv2(
+        #     spatial_dims=3,
+        #     in_channels=len(total_modalities),
+        #     out_channels=1,
+        #     kernel_size = (3,3,3),
+        #     channels=(16, 32, 64, 128, 256),
+        #     strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
+        #     num_res_units=2,
+        #     dropout=0.2,
+        # ).to(device)
         # print("training with theoretical unet")
-        # model = theory_UNET(in_channels=len(total_modalities)).to(device)
+        model = theory_UNET(in_channels=len(total_modalities)).to(device)
 
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
@@ -453,7 +508,7 @@ if __name__ == "__main__":
 
         #///////////////////////////////////////////////////
         #///////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/HEM/HEM_ATLAS_ALL_BATCH_3_Epoch_499.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
         # print("LOADING MODEL: ", load_model_path)
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFN":
@@ -656,20 +711,55 @@ if __name__ == "__main__":
 
                 if model_type == "UNET":
                     if randomly_drop:
-                        _, batch[img_index] = rand_set_channels_to_zero(channels_TBI, batch[img_index])                    
+                        modalities_remaining, batch[img_index] = rand_set_channels_to_zero(channels_TBI, batch[img_index])
+                        # this part is only relevant for TBI when doing multi channel segmentation
+                        if (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 not in modalities_remaining):
+                            seg_channel = 2
+                        elif (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 in modalities_remaining):
+                            seg_channel = 1
+                        elif (3 not in modalities_remaining):
+                            seg_channel = 0
+                        else:
+                            seg_channel = 2
+
+                        if TBI_multi_channel_seg:
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
+                        else:
+                            label = batch[label_index].to(device)
+                    else:
+                        label = batch[label_index].to(device)              
+                    
                     input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
                     input_data[:,TBI_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
+
                 else:
                     if randomly_drop:
-                        _, batch[img_index] = remove_random_channels(channels_TBI, batch[img_index])
+                        modalities_remaining, batch[img_index] = remove_random_channels(channels_TBI, batch[img_index])
+                        # this part is only relevant for TBI when doing multi channel segmentation
+                        if (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 not in modalities_remaining):
+                            seg_channel = 2
+                        elif (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 in modalities_remaining):
+                            seg_channel = 1
+                        elif (3 not in modalities_remaining):
+                            seg_channel = 0
+                        else:
+                            seg_channel = 2
+
+                        if TBI_multi_channel_seg:
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
+                        else:
+                            label = batch[label_index].to(device)  
+                    else:
+                        label = batch[label_index].to(device)
                     if augment_modalities:
                         if batch[img_index].shape[1] > 1:
                             should_create_modality = bool(random.randint(0,1))
                             if should_create_modality:
                                 batch[img_index] = augment(batch[img_index])
                     input_data = batch[img_index].to(device)
-                label = batch[label_index].to(device)
+                
+                # label = batch[label_index].to(device)
                 out = model(input_data)
                 # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
                 outputs.append(out)
@@ -900,7 +990,12 @@ if __name__ == "__main__":
                         else:
                             input_data = val_data[0]
                         input_data = input_data.to(device)
-                        label = val_data[1].to(device)
+
+                        if TBI_multi_channel_seg:
+                            label = val_data[1][:,[2],:,:,:].to(device)
+                        else:
+                            label = val_data[1].to(device)
+                        # label = val_data[1].to(device)
                         
                         roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
                         sw_batch_size = 1
