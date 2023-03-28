@@ -412,7 +412,7 @@ if __name__ == "__main__":
         else:
             img_path = "/home/sedm6251/projectMaterial/datasets/WMH/Images"
             seg_path = "/home/sedm6251/projectMaterial/datasets/WMH/Segs"
-            
+
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
@@ -552,8 +552,13 @@ if __name__ == "__main__":
 
 
     metric_values = list()
-    log_save = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/runs/" + save_name
-    model_save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/"
+
+    if is_cluster:
+        log_save = "/users/sedm6251/tests/runs/" + save_name
+        model_save_path = "/users/sedm6251/tests/"
+    else:
+        log_save = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/runs/" + save_name
+        model_save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/"
 
     writer = SummaryWriter(log_dir=log_save)
     for epoch in range(epochs):
