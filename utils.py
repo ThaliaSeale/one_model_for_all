@@ -32,6 +32,7 @@ def create_dataset(dataset):
     val_size = 40
     img_path_BRATS = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_Normalised_with_brainmask/normed"
     seg_path_BRATS = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_merged_labels_inc_edema"
+    # seg_path_BRATS = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_merged_labels"
     images = sorted(glob(os.path.join(img_path_BRATS, "BRATS*_normed_on_mask.nii.gz")))
     segs = sorted(glob(os.path.join(seg_path_BRATS, "BRATS*merged.nii.gz")))
     val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
@@ -43,7 +44,7 @@ def create_dataset(dataset):
     segs = sorted(glob(os.path.join(seg_path, "*_label_trimmed.nii.gz")))
     val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
   elif dataset == "ISLES2015":
-    val_size = 8
+    val_size = 28
     img_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/images"
     seg_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/labels"
     images = sorted(glob(os.path.join(img_path, "*_image.nii.gz")))

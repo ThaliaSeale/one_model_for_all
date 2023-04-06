@@ -31,12 +31,12 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN/MSFN_BRATS_ATLAS_ISLES_RAND_BEST_ISLES.pth", "MSFN", 0, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN/MSFN_BRATS_ATLAS_ISLES_RAND_Epoch_999.pth", "MSFN", 0, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
 
-    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3], "TBI":[1,2,4,3], "WMH":[1,2]}),
+    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3], "TBI":[1,2,4,3], "WMH":[1,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3], "TBI":[1,2,4,3], "WMH":[1,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_MSSEG.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3], "TBI":[1,2,4,3], "WMH":[1,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_Epoch_449.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3], "TBI":[1,2,4,3], "WMH":[1,2]}),
     
-    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_MSSEG.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_Epoch_499.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
@@ -47,9 +47,9 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION_AUGMENTED/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_AUGMENTED_Epoch_449.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     
     Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
-    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
-    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_MSSEG.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
-    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_Epoch_999.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_MSSEG.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_Epoch_999.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ISLES_MSSEG/HEM_SPATIAL_ATTENTION/HEM_Spatial_Attention_BRATS_ISLES_MSSEG_BEST_BRATS.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ISLES_MSSEG/HEM_SPATIAL_ATTENTION/HEM_Spatial_Attention_BRATS_ISLES_MSSEG_BEST_ISLES.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
@@ -68,7 +68,7 @@ if __name__=="__main__":
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/MSFN_PAIRED_BRATS_ALL_Epoch_199.pth", "MSFN",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]})
 
-    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_BEST_MSSEG.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_Epoch_499.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
@@ -84,14 +84,34 @@ if __name__=="__main__":
     # EnsembleNet(
     #     [
     #     Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3]}),
-    #     Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
+        # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "HEM spatial attention", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     #     Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     #     Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     #     ]
     # )
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_BEST_BRATS.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_BEST_ATLAS.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_BEST_MSSEG.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_BEST_TBI.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_BEST_WMH.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+
+    
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth", "MSFN", 6, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_redo_2_Epoch_199.pth", "MSFN", 6, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_redo_2_BEST_BRATS.pth", "MSFN", 6, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_redo_2_BEST_ATLAS.pth", "MSFN", 6, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_redo_2_BEST_TBI.pth", "MSFN", 6, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_redo_2_BEST_WMH.pth", "MSFN", 6, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_BEST_BRATS.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_BEST_ATLAS.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_BEST_MSSEG.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_BEST_TBI.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,2], "TBI":[1,3,5,2], "WMH":[1,3]}),
+
+
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/MSFN/MSFN_BRATS_RAND_BEST_BRATS.pth", "MSFN", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/MSFN_PAIRED/RAND/MSFN_PAIRED_BRATS_RAND_BEST_BRATS.pth", "MSFNP", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
@@ -101,6 +121,14 @@ if __name__=="__main__":
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/MSFN/redo/MSFN_BRATS_RAND_redo_BEST_BRATS.pth", "MSFN", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
     
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/UNET/ALL/UNET_BRATS_ALL_BEST_BRATS.pth", "UNet", 4, {"BRATS":[0,1,2,3], "ATLAS":[1], "MSSEG":[], "ISLES2015":[0,1,3,2]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/UNET/RAND/UNET_BRATS_RAND_BEST_BRATS.pth", "UNet", 4, {"BRATS":[0,1,2,3], "ATLAS":[1], "MSSEG":[], "ISLES2015":[0,1,3,2]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/MSFN_PAIRED/ALL/MSFN_PAIRED_BRATS_ALL_BEST_BRATS.pth", "MSFNP", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/MSFN_BRATS_ALL_BEST_BRATS.pth", "MSFN", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/HEM_BRATS_ALL_BEST_BRATS.pth", "HEM spatial attention", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
+
+
+    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/UNET/UNET_ATLAS_ALL_BATCH_3_BEST_ATLAS.pth", "UNet", 1, {"BRATS":[], "ATLAS":[1], "MSSEG":[], "ISLES2015":[0,1,3,2]}),
 
     ]
 
@@ -114,11 +142,11 @@ if __name__=="__main__":
 
     datasets = ["BRATS", "ATLAS", "MSSEG", "ISLES2015", "TBI", "WMH"]
     #REMOVE THIS
-    datasets = ["WMH"]
+    datasets = ["ISLES2015"]
 
     dataset_modalities = [[0,1,2,3],[0],[0,1,2,3,4],[0,1,2,3],[0,1,2,3],[0,1]]
     # REMOVE THIS
-    dataset_modalities = [[0,1]]
+    dataset_modalities = [[0]]
 
     for net in nets:
         print("*************** TESTING NET " + str(net.file_path) + " **************")
@@ -134,7 +162,7 @@ if __name__=="__main__":
             dataloader = utils.create_dataset(dataset)
             modalities = utils.create_modality_combinations(dataset_modalities[i])
             # REMOVE THIS
-            # modalities = [(0,),(1,),(2,),(3,)]
+            modalities = [(1,)]
             for combination in modalities:
                 # print(combination)
                 test.test(model,

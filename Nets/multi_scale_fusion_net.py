@@ -66,7 +66,7 @@ class Spatial_Attention(nn.Module):
             new_image = nib.Nifti1Image(outputs_numpy,affine=None)
             sform = np.diag([1, 1, 1, 1])
             new_image.header.set_sform(sform)
-            save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/Test_ISLES/TRAINED_ALL_PSEUDO/MSFN/attention_masks/" + name + "_chan_" + str(i) + ".nii.gz"
+            save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_BRATS/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/" + name + "_chan_" + str(i) + ".nii.gz"
             nib.save(new_image, save_path)
 
 
@@ -78,6 +78,7 @@ class Spatial_Attention(nn.Module):
             if ind == 0:
                 conv_outs = self.conv(modality)
             elif ind == 1:
+                # print("WARNING: BAD MSFN IN USE")
                 conv_outs = torch.stack((conv_outs, self.conv(modality)),dim=0)
             else:
                 conv_outs = torch.cat((conv_outs, torch.unsqueeze(self.conv(modality),dim=0)),dim=0)
@@ -104,16 +105,18 @@ class Spatial_Attention(nn.Module):
 
         # self.save_imgs(conv_outs, "image_with-attention")
 
-        del x
+        # del x
         # out = torch.sum(conv_outs,dim=0)
-
-
-        # for i in range(out.shape[1]):
-        #     outputs_numpy = out[:,i,:,:,:].cpu().detach().numpy()
-        #     outputs_numpy = np.squeeze(outputs_numpy)
-        #     new_image = nib.Nifti1Image(outputs_numpy,affine=None)
-        #     save_path = "/home/sedm6251/spatial_att_outs/output" + "_chan_" + str(i) + ".nii.gz"
-        #     nib.save(new_image, save_path)
+        # mean = torch.mean(x,dim=0)
+        # if conv_outs.shape[2] == 16:
+        #     for i in range(out.shape[1]):
+        #         outputs_numpy = mean[:,i,:,:,:].cpu().detach().numpy()
+        #         outputs_numpy = np.squeeze(outputs_numpy)
+        #         new_image = nib.Nifti1Image(outputs_numpy,affine=None)
+        #         sform = np.diag([1, 1, 1, 1])
+        #         new_image.header.set_sform(sform)   
+        #         save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_BRATS/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/mean" + "_chan_" + str(i) + ".nii.gz"
+        #         nib.save(new_image, save_path)
 
         return torch.sum(conv_outs,dim=0)
 

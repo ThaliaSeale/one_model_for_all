@@ -45,8 +45,8 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
 
     # /////////// TODO REMOVE THIS /////////////////
     # print("USING ONLY FIRST 50 IMAGES!!!!!")
-    # train_images = images[:50]
-    # train_segs = segs[:50]
+    # train_images = images[:20]
+    # train_segs = segs[:20]
 
 
     train_imtrans = Compose(
@@ -146,7 +146,7 @@ if __name__ == "__main__":
     workers = 0
     train_batch_size = 1
     cropped_input_size = [128,128,128]
-    val_interval = 4
+    val_interval = 8
     lr = 1e-3
     crop_on_label = False
     TBI_multi_channel_seg = True
@@ -227,8 +227,8 @@ if __name__ == "__main__":
     # /////////////////////////////////////////
     # /////////////////////////////////////////
     # print("TODO MANUALLY SETTING TBI CHANNEL MAP")
-    # TBI_channel_map = [1,2,4,3]
-    # total_modalities = ['DWI', 'FLAIR', 'T1', 'T1c', 'T2']
+    # ISLES_channel_map = [1,3,5,4]
+    # total_modalities = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
     
     print("Total modalities: ", total_modalities)
     print("BRATS channel map: ", BRATS_channel_map)
@@ -428,7 +428,7 @@ if __name__ == "__main__":
 
 
     # ////////////////// TODO REMOVE THIS  ////////////
-    # data_size = 50
+    # data_size = 20
 
 
 
@@ -458,7 +458,7 @@ if __name__ == "__main__":
     print("Dropout: 0.2")
 
     if model_type == "UNET":
-        print("TRAINING WITH UNET")
+        # print("TRAINING WITH UNET")
         # model = UNetv2(
         #     spatial_dims=3,
         #     in_channels=len(total_modalities),
@@ -469,13 +469,13 @@ if __name__ == "__main__":
         #     num_res_units=2,
         #     dropout=0.2,
         # ).to(device)
-        # print("training with theoretical unet")
+        print("training with theoretical unet")
         model = theory_UNET(in_channels=len(total_modalities)).to(device)
 
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
         #//////////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
         # print("LOADING MODEL: ", load_model_path)
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "HEMIS_spatial_attention":
@@ -513,7 +513,7 @@ if __name__ == "__main__":
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFN":
         model = MSFN(paired=False).to(device)
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFN/MSFN_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_redo_2_Epoch_199.pth"
         # print("LOADING MODEL: ", load_model_path)
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFNP":
