@@ -91,6 +91,7 @@ class Spatial_Attention(nn.Module):
             conv_outs = self.softmax(conv_outs)
         else:
             conv_outs = torch.ones_like(x)
+            # /////////////////////       PUT THIS BACK!!!
 
         # for i in range(len(modalities)):
         #     avg_value = torch.mean(conv_outs)
@@ -101,6 +102,9 @@ class Spatial_Attention(nn.Module):
         # self.save_imgs(x, "orig")
         # self.save_imgs(conv_outs, "attention_mask")
 
+        # print("shapes")
+        # print(conv_outs.shape)
+        # print(x.shape)
         conv_outs = torch.mul(conv_outs, x)
 
         # self.save_imgs(conv_outs, "image_with-attention")
@@ -117,7 +121,7 @@ class Spatial_Attention(nn.Module):
         #         new_image.header.set_sform(sform)   
         #         save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_BRATS/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/mean" + "_chan_" + str(i) + ".nii.gz"
         #         nib.save(new_image, save_path)
-
+        # return x[0]
         return torch.sum(conv_outs,dim=0)
 
 class Paired_Spatial_Attention(nn.Module):
@@ -135,8 +139,8 @@ class Paired_Spatial_Attention(nn.Module):
         print("Out channels: ", 2*out_channels)
 
         self.in_channels = in_channels
-        conv_1 = Convolution(spatial_dims=3, in_channels=2*in_channels, out_channels=conv_1_out_channels, kernel_size=3, strides=1,dropout=dropout)
-        conv_2 = Convolution(spatial_dims=3, in_channels=conv_1_out_channels, out_channels=2*out_channels, kernel_size=3, strides=1, dropout=dropout)
+        conv_1 = Convolution(spatial_dims=3, in_channels=2*in_channels, out_channels=2*conv_1_out_channels, kernel_size=3, strides=1,dropout=dropout)
+        conv_2 = Convolution(spatial_dims=3, in_channels=2*conv_1_out_channels, out_channels=2*out_channels, kernel_size=3, strides=1, dropout=dropout)
 
         self.conv = nn.Sequential(conv_1,conv_2)
         self.softmax = nn.Softmax(dim=0)

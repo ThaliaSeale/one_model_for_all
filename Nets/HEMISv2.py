@@ -12,6 +12,7 @@ from Nets.UNet_block_deprecated import UNet_block_deprecated
 import nibabel as nib
 import numpy as np
 from Nets.theory_UNET import theory_UNET
+from itertools import combinations
 
 
 class Channel_Attention(nn.Module):
@@ -106,6 +107,120 @@ class Spatial_Attention(nn.Module):
 
         return torch.sum(conv_outs,dim=0)
 
+class Paired_Spatial_Attention(nn.Module):
+    def __init__(self,
+        in_channels: int,
+        conv_1_out_channels: int,
+        out_channels: int,
+        dropout: float,
+    ) -> None:
+        super().__init__()
+
+        print("Using paired spatial attention")
+        print("Channels in: ", 2*in_channels)
+        print("Mid channels: ", 2*conv_1_out_channels)
+        print("Out channels: ", 2*out_channels)
+
+        self.in_channels = in_channels
+        conv_1 = Convolution(spatial_dims=3, in_channels=2*in_channels, out_channels=conv_1_out_channels, kernel_size=3, strides=1,dropout=dropout)
+        conv_2 = Convolution(spatial_dims=3, in_channels=conv_1_out_channels, out_channels=2*out_channels, kernel_size=3, strides=1, dropout=dropout)
+
+        self.conv = nn.Sequential(conv_1,conv_2)
+        self.softmax = nn.Softmax(dim=0)
+        print("NO SHUFFLE")
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
+        num_modalities = x.shape[0]
+        modality_combinations = list(combinations(np.arange(num_modalities),2))
+        modalities = torch.unbind(input=x,dim=0)
+        dict_masks = {}
+        for combination in modality_combinations:
+            combination = list(combination)
+            # random.shuffle(combination)
+            mod_1_index = combination[0]
+            mod_2_index = combination[1]
+            mod_1 = modalities[mod_1_index]
+            mod_2 = modalities[mod_2_index]
+            conv_input = torch.cat((mod_1,mod_2),dim=1)
+            conv_out = self.conv(conv_input)
+            mask_1 = conv_out[:,:self.in_channels]
+            mask_2 = conv_out[:,-self.in_channels:]
+            
+            if mod_1_index in dict_masks:
+                # if the entry in the dictionary does exist and the dimensionality is 5 (i.e. just batch x channel x dims), not the new dimension
+                if len(dict_masks[mod_1_index].shape) == 5:
+                    dict_masks[mod_1_index] = torch.stack((dict_masks[mod_1_index], mask_1),dim=0)
+                else:
+                    dict_masks[mod_1_index] = torch.cat((dict_masks[mod_1_index], torch.unsqueeze(mask_1,dim=0)), dim=0)
+            else:
+                dict_masks[mod_1_index] = mask_1
+
+            if mod_2_index in dict_masks:
+                # if the entry in the dictionary does exist and the dimensionality is 5 (i.e. just batch x channel x dims), not the new dimension
+                if len(dict_masks[mod_2_index].shape) == 5:
+                    dict_masks[mod_2_index] = torch.stack((dict_masks[mod_2_index], mask_2),dim=0)
+                else:
+                    dict_masks[mod_2_index] = torch.cat((dict_masks[mod_2_index], torch.unsqueeze(mask_2,dim=0)), dim=0)
+            else:
+                dict_masks[mod_2_index] = mask_2
+        
+        # tensor containinty sum of all the averaged tensors for normalisation
+        # sum_tensor = torch.zeros_like(mask_1)
+        for modality in dict_masks:
+            mean = torch.mean(dict_masks[modality],dim=0)
+            dict_masks[modality] = mean
+            # sum_tensor = sum_tensor + mean
+
+        att_mask_out = torch.zeros_like(x)
+        for modality in dict_masks:
+            # att_mask_out[modality] = torch.div(dict_masks[modality],sum_tensor)
+            att_mask_out[modality] = dict_masks[modality]
+
+        # print("CHECK THIS WORKS")
+        if num_modalities != 1:
+            att_mask_out = self.softmax(att_mask_out)
+            m = torch.mul(att_mask_out, x)
+            s = torch.sum(m,dim=0)
+        else:
+            s = torch.sum(x,dim=0)
+
+        # outputs_numpy = att_mask_out[:,0,0,:,:,:].cpu().detach().numpy()
+        # outputs_numpy = np.squeeze(outputs_numpy)
+        # # outputs_numpy = np.transpose(outputs_numpy,(1,2,3,0))
+        # new_image = nib.Nifti1Image(outputs_numpy,affine=None)
+        # save_path = "/home/sedm6251/DELETE_mask.nii.gz"
+        # nib.save(new_image, save_path)
+
+        # outputs_numpy = x[:,0,0,:,:,:].cpu().detach().numpy()
+        # outputs_numpy = np.squeeze(outputs_numpy)
+        # # outputs_numpy = np.transpose(outputs_numpy,(1,2,3,0))
+        # new_image = nib.Nifti1Image(outputs_numpy,affine=None)
+        # save_path = "/home/sedm6251/DELETE_in.nii.gz"
+        # nib.save(new_image, save_path)
+        
+        
+
+        # outputs_numpy = m[:,0,0,:,:,:].cpu().detach().numpy()
+        # outputs_numpy = np.squeeze(outputs_numpy)
+        # # outputs_numpy = np.transpose(outputs_numpy,(1,2,3,0))
+        # new_image = nib.Nifti1Image(outputs_numpy,affine=None)
+        # save_path = "/home/sedm6251/DELETE_after_mask.nii.gz"
+        # nib.save(new_image, save_path)
+
+
+        
+
+        # outputs_numpy = s[0,0,:,:,:].cpu().detach().numpy()
+        # outputs_numpy = np.squeeze(outputs_numpy)
+        # # outputs_numpy = np.transpose(outputs_numpy,(1,2,3,0))
+        # new_image = nib.Nifti1Image(outputs_numpy,affine=None)
+        # save_path = "/home/sedm6251/DELETE_fused.nii.gz"
+        # nib.save(new_image, save_path)
+
+        return s
+
+  
 class HEMISv2(nn.Module):
 
     def __init__(self,
@@ -262,7 +377,9 @@ class HEMISv2(nn.Module):
         if self.fusion_type == "channel attention":
             self.channel_attention_fusion = Channel_Attention()
         elif self.fusion_type == "spatial attention":
+            # self.spatial_attention_fusion = Channel_Attention()
             self.spatial_attention_fusion = Spatial_Attention(in_channels=UNet_outs,conv_1_out_channels=7,out_channels=UNet_outs,dropout=dropout)
+            # self.spatial_attention_fusion = Paired_Spatial_Attention(in_channels=UNet_outs,conv_1_out_channels=7,out_channels=UNet_outs,dropout=dropout)
 
         if pred_uncertainty:
             self.initial_convs, self.seg_head, self.unc_head = create_uncertainty_seg_stage()

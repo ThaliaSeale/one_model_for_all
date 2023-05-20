@@ -3,29 +3,19 @@ from monai.data import ImageDataset, create_test_image_3d, decollate_batch, Data
 from monai.inferers import sliding_window_inference
 from monai.metrics import DiceMetric
 from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop, RandCropByPosNegLabel
-from monai.visualize import plot_2d_or_3d_image
 from monai.utils import set_determinism
-import monai.losses as lo
 from monai.losses.dice import DiceLoss
-
-
 import torch
 from torch.utils.tensorboard import SummaryWriter
-
 import logging
 import os
 import sys
-import tempfile
 from glob import glob
-
-import nibabel as nib
 import numpy as np
 import random
-
 import sys
 from Nets.UNetv2 import UNetv2
 from monai.networks.nets.unet import UNet
-# from orig_UNet_but_with_avg_pool_res_unit import UNet_avg_pool
 from Nets.HEMISv2 import HEMISv2
 from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
@@ -43,10 +33,10 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
     train_segs = train_segs * div + train_segs[:rem]
 
 
-    # /////////// TODO REMOVE THIS /////////////////
-    # print("USING ONLY FIRST 50 IMAGES!!!!!")
-    # train_images = images[:20]
-    # train_segs = segs[:20]
+    # /////////// TODO ONLY UNCOMMENT FOR LIMITED DATA /////////////////
+    # print("USING ONLY FIRST 10 IMAGES!!!!!")
+    # train_images = images[:10]
+    # train_segs = segs[:10]
 
 
     train_imtrans = Compose(
@@ -71,7 +61,6 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
     # create a training data loader
     train_ds = ImageDataset(train_images, train_segs, transform=train_imtrans, seg_transform=train_imtrans)
     train_loader = DataLoader(train_ds, batch_size=train_batch_size, shuffle=True, num_workers=workers, pin_memory=0)
-    # train_loader = DataLoader(train_ds, batch_size=4, shuffle=True, num_workers=workers)
     # create a validation data loader
     val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
     val_loader = DataLoader(val_ds, batch_size=1, num_workers=workers, pin_memory=0)
@@ -82,7 +71,6 @@ def rand_set_channels_to_zero(dataset_modalities: list, batch_img_data: torch.Te
     number_of_dropped_modalities = np.random.randint(0,len(dataset_modalities))
     modalities_dropped = random.sample(list(np.arange(len(dataset_modalities))), number_of_dropped_modalities)
     modalities_dropped.sort()
-    # modalities_remaining = list(set(modalities_array) - set(modalities_dropped))
     batch_img_data[:,modalities_dropped,:,:,:] = 0.
     modalities_remaining = list(set(np.arange(len(dataset_modalities))) - set(modalities_dropped))
     
@@ -109,15 +97,8 @@ def augment(batch_img_data:torch.Tensor):
 if __name__ == "__main__":
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    print("original_setup.py")
-    # images are 240x240x155
-
-    print("USING BRAINMASK NORMED")
-
-    # dataset = "BRATS"
-
-    set_determinism(seed=0)
-    print("determinism seed = 0")
+    set_determinism(seed=1)
+    print("determinism seed = 1")
 
     device_id = int(sys.argv[1])
     epochs = int(sys.argv[2])
@@ -143,10 +124,10 @@ if __name__ == "__main__":
 
     print("lr lower lim: ", lr_lower_lim)
 
-    workers = 0
-    train_batch_size = 1
+    workers = 3
+    train_batch_size = 3
     cropped_input_size = [128,128,128]
-    val_interval = 8
+    val_interval = 1
     lr = 1e-3
     crop_on_label = False
     TBI_multi_channel_seg = True
@@ -210,24 +191,11 @@ if __name__ == "__main__":
     WMH_channel_map = map_channels(channels_WMH, total_modalities)
 
 
-    # ////////CHANGE THIS /////////////
+    # //////// ONLY IF MANUALLY SETTING CHANNELS FOR REFINEMENT/////////////
     # /////////////////////////////////////////
     # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # print("TODO MANUALLY SETTING TBI CHANNEL MAP")
-    # ISLES_channel_map = [1,3,5,4]
+    # print("MANUALLY SETTING CHANNEL MAP")
+    # ISLES_channel_map = [1,3,5,2]
     # total_modalities = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
     
     print("Total modalities: ", total_modalities)
@@ -427,24 +395,11 @@ if __name__ == "__main__":
 
 
 
-    # ////////////////// TODO REMOVE THIS  ////////////
-    # data_size = 20
-
-
-
-
-
+    # ////////////////// ONLY FOR LIMITED DATA  ////////////
+    # data_size = 10
 
     print("Running on GPU:" + str(device_id))
     print("Running for epochs:" + str(epochs))
-    # print("Final layer strides:" + str(2))
-    # print("modalities " + modalities)
-
-    # modalities_array = list(modalities)
-    # for index, mode in enumerate(modalities_array):
-    #     int_mode = int(mode)
-    #     modalities_array[index] = int_mode
-    # print(modalities_array)
 
     cuda_id = "cuda:" + str(device_id)
     device = torch.device(cuda_id)
@@ -458,41 +413,16 @@ if __name__ == "__main__":
     print("Dropout: 0.2")
 
     if model_type == "UNET":
-        # print("TRAINING WITH UNET")
-        # model = UNetv2(
-        #     spatial_dims=3,
-        #     in_channels=len(total_modalities),
-        #     out_channels=1,
-        #     kernel_size = (3,3,3),
-        #     channels=(16, 32, 64, 128, 256),
-        #     strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
-        #     num_res_units=2,
-        #     dropout=0.2,
-        # ).to(device)
-        print("training with theoretical unet")
+        print("TRAINING WITH UNET")
+        print("training with unet")
         model = theory_UNET(in_channels=len(total_modalities)).to(device)
 
-        #//////////////////////////////////////////////////////
-        #//////////////////////////////////////////////////////
-        #//////////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
-        # print("LOADING MODEL: ", load_model_path)
-        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
+        print("LOADING MODEL: ", load_model_path)
+        model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "HEMIS_spatial_attention":
         print("TRAINING WITH HEMIS SPATIAL ATTENTION")
-        # model = HEMISv2(
-        #     post_seg_res_units=False,
-        #     fusion_type="spatial attention",
-        #     UNet_outs=12,
-        #     conv1_in=12,
-        #     conv1_out=12,
-        #     conv2_in=12,
-        #     conv2_out=12,
-        #     conv3_in=12,
-        #     pred_uncertainty=False,
-        #     grid_UNet=False,
-        # ).to(device)
-
+ 
         model = HEMISv2(
             post_seg_res_units=False,
             fusion_type="spatial attention",
@@ -513,7 +443,7 @@ if __name__ == "__main__":
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFN":
         model = MSFN(paired=False).to(device)
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_redo_2_Epoch_199.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
         # print("LOADING MODEL: ", load_model_path)
         # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFNP":
@@ -529,12 +459,10 @@ if __name__ == "__main__":
     
     
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode="max", factor=0.2, patience=10, verbose=True,min_lr=lr_lower_lim)
-
+    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode="max", factor=0.2, patience=10, verbose=True,min_lr=lr_lower_lim)
+    # cyclic_scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer=optimizer, base_lr=1e-4, max_lr=1e-3, step_size_up=200, mode="triangular",cycle_momentum=False)
     print("in_channels=",len(total_modalities))
     print("batch size = ",train_batch_size)
-
-    # start a typical PyTorch training
     
     best_metric_BRATS = -1
     best_metric_ATLAS = -1
@@ -549,7 +477,6 @@ if __name__ == "__main__":
     best_metric_epoch_ISLES = -1
     best_metric_epoch_TBI = -1
     best_metric_epoch_WMH = -1
-
 
     metric_values = list()
 
@@ -576,13 +503,9 @@ if __name__ == "__main__":
  
             step += 1
 
-            # # if FLAIR and T2 missing, do not keep edema in labels
-            # if (0 not in modalities_array) and (3 not in modalities_array):
-            #     seg_channel = 1
-            # else:
-            #     seg_channel = 0
             outputs = []
             labels = []
+
             if "BRATS" in dataset:
                 loader_index = data_loader_map["BRATS"]
                 batch = batch_data[loader_index]
@@ -796,10 +719,6 @@ if __name__ == "__main__":
                 labels.append(label)
 
 
-
-            # print(inputs.shape)
-            # print(batch_data[0][:,[0,2],:,:].shape)
-            
             optimizer.zero_grad()
 
             combined_outs = torch.cat(outputs, dim=0)
@@ -812,8 +731,10 @@ if __name__ == "__main__":
             epoch_len = data_size  // train_batch_size
             print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
             writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
+            writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * epoch + step)
+            # cyclic_scheduler.step()
+            
         epoch_loss /= step
-        # epoch_loss_values.append(epoch_loss)
         print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
         if (epoch+1) % 50 == 0:
@@ -836,7 +757,6 @@ if __name__ == "__main__":
 
                     loader_index = data_loader_map["BRATS"]
                     for val_data in val_loader_BRATS:
-                        # batch = val_data[loader_index]
                         if model_type == "UNET":
                             input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
                             input_data[:,BRATS_channel_map,:,:,:] = val_data[0]
@@ -862,7 +782,7 @@ if __name__ == "__main__":
                     if metric_BRATS > best_metric_BRATS:
                         best_metric_BRATS = metric_BRATS
                         best_metric_epoch_BRATS = epoch + 1
-                        if epoch>150:
+                        if epoch>1:
                             model_save_name = model_save_path + save_name + "_BEST_BRATS.pth"
                             torch.save(model.state_dict(), model_save_name)
                             print("saved new best metric model for BRATS")
@@ -899,7 +819,7 @@ if __name__ == "__main__":
                     if metric_ATLAS > best_metric_ATLAS:
                         best_metric_ATLAS = metric_ATLAS
                         best_metric_epoch_ATLAS = epoch + 1
-                        if epoch>150:
+                        if epoch>1:
                             model_save_name = model_save_path + save_name + "_BEST_ATLAS.pth"
                             torch.save(model.state_dict(), model_save_name)
                             print("saved new best metric model")
@@ -936,7 +856,7 @@ if __name__ == "__main__":
                     if metric_MSSEG > best_metric_MSSEG:
                         best_metric_MSSEG = metric_MSSEG
                         best_metric_epoch_MSSEG = epoch + 1
-                        if epoch>150:
+                        if epoch>1:
                             model_save_name = model_save_path + save_name + "_BEST_MSSEG.pth"
                             torch.save(model.state_dict(), model_save_name)
                             print("saved new best metric model")
@@ -973,7 +893,7 @@ if __name__ == "__main__":
                     if metric_ISLES > best_metric_ISLES:
                         best_metric_ISLES = metric_ISLES
                         best_metric_epoch_ISLES = epoch + 1
-                        if epoch>150:
+                        if epoch>1:
                             model_save_name = model_save_path + save_name + "_BEST_ISLES.pth"
                             torch.save(model.state_dict(), model_save_name)
                             print("saved new best metric model")
@@ -1015,7 +935,7 @@ if __name__ == "__main__":
                     if metric_TBI > best_metric_TBI:
                         best_metric_TBI = metric_TBI
                         best_metric_epoch_TBI = epoch + 1
-                        if epoch>150:
+                        if epoch>1:
                             model_save_name = model_save_path + save_name + "_BEST_TBI.pth"
                             torch.save(model.state_dict(), model_save_name)
                             print("saved new best metric model")
@@ -1052,7 +972,7 @@ if __name__ == "__main__":
                     if metric_WMH > best_metric_WMH:
                         best_metric_WMH = metric_WMH
                         best_metric_epoch_WMH = epoch + 1
-                        if epoch>150:
+                        if epoch>1:
                             model_save_name = model_save_path + save_name + "_BEST_WMH.pth"
                             torch.save(model.state_dict(), model_save_name)
                             print("saved new best metric model")
@@ -1066,7 +986,7 @@ if __name__ == "__main__":
                 
 
                 # scheduler.step(metric,epoch=epoch)
-                writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * (epoch+1))
+                # writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * (epoch+1))
 
 
 

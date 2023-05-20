@@ -44,7 +44,7 @@ def create_dataset(dataset):
     segs = sorted(glob(os.path.join(seg_path, "*_label_trimmed.nii.gz")))
     val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
   elif dataset == "ISLES2015":
-    val_size = 28
+    val_size = 8
     img_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/images"
     seg_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/labels"
     images = sorted(glob(os.path.join(img_path, "*_image.nii.gz")))
@@ -75,6 +75,13 @@ def create_dataset(dataset):
     images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
     segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
     val_ds = ImageDataset(images[-val_size:], segs[-val_size:], transform=val_imtrans, seg_transform=val_segtrans)
+  elif dataset == "camcan":
+    val_size = 250
+    img_path = "/home/sedm6251/projectMaterial/datasets/camcan2/"
+    # seg_path = "/home/sedm6251/projectMaterial/datasets/camca/Segs"
+    images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
+    # segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
+    val_ds = ImageDataset(images[:val_size], images[:val_size], transform=val_imtrans, seg_transform=val_segtrans)
 
   
   workers=4
@@ -88,16 +95,23 @@ def create_dataset(dataset):
 
 def create_net(net, device,cuda_id):
   if net.net_type == "UNet":
-    # single_Unet = monai.networks.nets.UNet(
-    #   spatial_dims=3,
-    #   in_channels=modalities_trained_on,
-    #   out_channels=1,
-    #   kernel_size = (3,3,3),
-    #   channels=(16, 32, 64, 128, 256),
-    #   strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
-    #   num_res_units=res_units,
-    #   dropout=0.2,
-    # ).to(device)
+    # # single_Unet = monai.networks.nets.UNet(
+    # #   spatial_dims=3,
+    # #   in_channels=modalities_trained_on,
+    # #   out_channels=1,
+    # #   kernel_size = (3,3,3),
+    # #   channels=(16, 32, 64, 128, 256),
+    # #   strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
+    # #   num_res_units=res_units,
+    # #   dropout=0.2,
+    # # ).to(device)
+    
+    model = theory_UNET(in_channels=net.modalities_trained_on,
+                        out_channels=1).to(device)
+
+    model.load_state_dict(torch.load(net.file_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+    model.eval()
+  if net.net_type == "UNetv2":
     model = UNetv2(
       spatial_dims=3,
       in_channels=net.modalities_trained_on,
@@ -108,10 +122,6 @@ def create_net(net, device,cuda_id):
       num_res_units=2,
       dropout=0.2,
     ).to(device)
-
-    # model = theory_UNET(in_channels=net.modalities_trained_on,
-    #                     out_channels=1).to(device)
-
     model.load_state_dict(torch.load(net.file_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     model.eval()
   elif net.net_type == "Theory UNET":
@@ -194,9 +204,10 @@ def save_nifti(tensor: torch.Tensor, file_path: str):
     # vars_numpy = np.transpose(vars_numpy,(1,2,3,0))
     new_image = nib.Nifti1Image(vars_numpy,affine=None)
     sform = np.diag([1, 1, 1, 1])
-    # t = [-98,-134,-72,1]
-    # sform[:,3] = t
+    t = [-98,-134,-72,1]
+    sform[:,3] = t
     new_image.header.set_sform(sform)
+    new_image.header.set_sform(sform,code="aligned")
     nib.save(new_image, file_path)
 
 def plot_slices(tensors: list, slice_numbers, num_columns):
