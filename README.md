@@ -40,10 +40,10 @@ Class structures for testing networks
 functions for data augmentation pathway
 
 # Folders:
-pre_processing - all pre-processing functions used
-Nets - all network architectures
-HEMIS_Nets_Legacy - old experimental networks 
-Experimental - any additional scripts for experimentation that did not get progressed further
+* pre_processing - all pre-processing functions used
+* Nets - all network architectures
+* HEMIS_Nets_Legacy - old experimental networks 
+* Experimental - any additional scripts for experimentation that did not get progressed further
 
 # Packages and Versions Used
 * MONAI version: 1.1.dev2241
