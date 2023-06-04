@@ -1,8 +1,11 @@
+# One Model For All
+
 Creating a CNN model architecture that can handle any input modalities for biomedical MRI segmentation. Currently networks are trained on datasets individually - e.g. on Brain Tumour separately to stroke. This ignores the possiblility that there may be potential to learn inherent features of "healthy" and "unhealthy" matter. The main problem with this is that MRIs come in multiple different modalities. Most network architectures require this channel dimensionality to be predefined at training. We would like to make use of modalities never seen at training and be able to take in an undefined number of modalities.
 
 Networks are and required components are in the Nets folder, scripts used for pre-processing in pre_processing and all scripts for various train and test configurations are in the main folder.
 
-* train_multiple.py *
+# Scripts
+## train_multiple.py
 - Contains the code for training multiple databases with heterogeneous modalities
 - Training Method is to have class balance across datasets
 - Can train any of the nets in this project
@@ -18,25 +21,25 @@ Networks are and required components are in the Nets folder, scripts used for pr
 8 - Model Type -> The type of model to train (U-Net, MSFN, ...)
 9 - Augment Modalities (Bool) -> whether the data should be augmented by a non-linear combination of existing modaities
 
-* test_master.py *
+## test_master.py 
 Contains all network file paths and the function calls to test networks - all arguments are within the script
 
-* test.py *
+## test.py 
 Contains the actual testing code
 
-* utils.py * 
+## utils.py 
 Various functions used across scripts
 
-* blob detection.py *
+## blob detection.py 
 Contains functions for connected component detection testing
 
-* Net_to_test.py *
+## Net_to_test.py 
 Class structures for testing networks
 
-* create_modality.py *
+## create_modality.py 
 functions for data augmentation pathway
 
-//// Folders:
+# Folders:
 pre_processing - all pre-processing functions used
 Nets - all network architectures
 HEMIS_Nets_Legacy - old experimental networks 
