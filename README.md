@@ -46,14 +46,14 @@ HEMIS_Nets_Legacy - old experimental networks
 Experimental - any additional scripts for experimentation that did not get progressed further
 
 # Packages and Versions Used
-MONAI version: 1.1.dev2241
-Numpy version: 1.23.3
-Pytorch version: 1.14.0.dev20221012+cu117
-Nibabel version: 4.0.2
-Pillow version: 7.0.0
-Tensorboard version: 2.10.1
-gdown version: 4.5.1
-TorchVision version: 0.15.0.dev20221012+cu117
-tqdm version: 4.64.1
-psutil version: 5.9.2
-pandas version: 1.5.1
+* MONAI version: 1.1.dev2241
+* Numpy version: 1.23.3
+* Pytorch version: 1.14.0.dev20221012+cu117
+* Nibabel version: 4.0.2
+* Pillow version: 7.0.0
+* Tensorboard version: 2.10.1
+* gdown version: 4.5.1
+* TorchVision version: 0.15.0.dev20221012+cu117
+* tqdm version: 4.64.1
+* psutil version: 5.9.2
+* pandas version: 1.5.1
