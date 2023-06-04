@@ -10,16 +10,16 @@ Networks are and required components are in the Nets folder, scripts used for pr
 - Training Method is to have class balance across datasets
 - Can train any of the nets in this project
 
-- Arguments:
-1 - Device ID -> the cuda GPU ID to use for training
-2 - Epochs -> number of epochs to train
-3 - Save Name -> What to save the model and tensorboard files as
-4 - Dataset -> The dataset to train
-5 - Randomly Drop (Bool) -> Whether or not to randomly drop modalities
-6 - BRATS 2 Channel Segmentation -> whether different segmentation masks for brats should be used if e.g. FLAIR and T2 are dropped
-7 - Learning Rate Lower Limit (If using reduce learning rate on plateau, this is lower limit)
-8 - Model Type -> The type of model to train (U-Net, MSFN, ...)
-9 - Augment Modalities (Bool) -> whether the data should be augmented by a non-linear combination of existing modaities
+### Arguments:
+* 1 - Device ID -> the cuda GPU ID to use for training
+* 2 - Epochs -> number of epochs to train
+* 3 - Save Name -> What to save the model and tensorboard files as
+* 4 - Dataset -> The dataset to train
+* 5 - Randomly Drop (Bool) -> Whether or not to randomly drop modalities
+* 6 - BRATS 2 Channel Segmentation -> whether different segmentation masks for brats should be used if e.g. FLAIR and T2 are dropped
+* 7 - Learning Rate Lower Limit (If using reduce learning rate on plateau, this is lower limit)
+* 8 - Model Type -> The type of model to train (U-Net, MSFN, ...)
+* 9 - Augment Modalities (Bool) -> whether the data should be augmented by a non-linear combination of existing modaities
 
 ## test_master.py 
 Contains all network file paths and the function calls to test networks - all arguments are within the script
