@@ -28,7 +28,7 @@ THE ORDER OF THE MODALITY CHANNELS IN EACH DATASET IS ASSUMED TO BE:
 
 Example command:
 python train_multiple.py 0 1000 my_save_name BRATS_ATLAS_ISLES 1
--> means train on BraTS, ATLAS, and ISLES while randomly dropping modalities on GPU 0 for 1000 epochs and save a tensorboard log to my_save_name
+* means train on BraTS, ATLAS, and ISLES while randomly dropping modalities on GPU 0 for 1000 epochs and save a tensorboard log to my_save_name
 
 ## test_master.py 
 ### Arguments:
@@ -41,7 +41,7 @@ Contains all network file paths and calls to run the testing script. The file to
 
 Example command:
 python test_master.py 0 BRATS 012 0
--> tests any uncommented network in the nets list on BRATS modalities 0,1,2 (FLAIR, T1, T1c) using GPU 0
+* tests any uncommented network in the nets list on BRATS modalities 0,1,2 (FLAIR, T1, T1c) using GPU 0
 
 ## test.py 
 Contains the actual testing code - prints out the overall DSC but has commented out lines that have further functionality
