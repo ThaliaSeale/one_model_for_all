@@ -6,12 +6,12 @@ Networks and required components are in the Nets folder, scripts used for pre-pr
 
 # Data
 THE ORDER OF THE MODALITY CHANNELS IN EACH DATASET IS ASSUMED TO BE:
-BRATS: ["FLAIR", "T1", "T1c", "T2"]
-ATLAS: ["T1"]
-MSSEG: ["FLAIR","T1","T1c","T2", "DP"]
-ISLES: ["FLAIR", "T1", "T2", "DWI"]
-TBI: ["FLAIR", "T1", "T2", "SWI"]
-WMH: ["FLAIR", "T1"]
+* BRATS: ["FLAIR", "T1", "T1c", "T2"]
+* ATLAS: ["T1"]
+* MSSEG: ["FLAIR","T1","T1c","T2", "DP"]
+* ISLES: ["FLAIR", "T1", "T2", "DWI"]
+* TBI: ["FLAIR", "T1", "T2", "SWI"]
+* WMH: ["FLAIR", "T1"]
 
 # Scripts
 ## train_multiple.py
