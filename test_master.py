@@ -329,11 +329,10 @@ if __name__=="__main__":
     #########################################################
     # *********  CONFIGURABLE PARAMETERS  **********
     #########################################################
-    save_segs=False
+    save_segs=False # True to save the segmentation outputs 
     save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_ATLAS/UNET/"
-    detect_blobs = False
+    detect_blobs = False # whether to conduct connected component analysis
     #########################################################
-
 
     device_id = int(sys.argv[1])
     datasets_to_test = str(sys.argv[2]) 
@@ -357,7 +356,7 @@ if __name__=="__main__":
     if "MSSEG" in datasets_to_test:
         datasets.append("MSSEG")
         dataset_modalities.append([0,1,2,3,4])
-    if "ISLES2015" in datasets_to_test:
+    if "ISLES" in datasets_to_test:
         datasets.append("ISLES2015")
         dataset_modalities.append([0,1,2,3])
     if "TBI" in datasets_to_test:
