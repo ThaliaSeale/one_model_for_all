@@ -4,6 +4,7 @@ from monai.utils import set_determinism
 import utils
 from Net_to_test import Net
 import pandas as pd
+import sys
 
 if __name__=="__main__":
 
@@ -35,9 +36,6 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_ISLES_BEST_ATLAS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_ISLES_BEST_BRATS.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES/MSFN_PAIRED/MSFN_PAIRED_BRATS_ATLAS_ISLES_Epoch_449.pth", "MSFNP",5, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[]}),
-
-
-
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3], "TBI":[1,2,4,3], "WMH":[1,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth", "UNet", 5, {"BRATS":[1,2,3,4], "ATLAS":[2], "MSSEG":[1,2,3,4,0], "ISLES2015":[1,2,4,3], "TBI":[1,2,4,3], "WMH":[1,2]}),
@@ -138,7 +136,6 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/MSFN_PAIRED/ALL/MSFN_PAIRED_BRATS_ALL_BEST_BRATS.pth", "MSFNP", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/MSFN_BRATS_ALL_BEST_BRATS.pth", "MSFN", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/HEM_BRATS_ALL_BEST_BRATS.pth", "HEM spatial attention", 4, {"BRATS":[], "ATLAS":[], "MSSEG":[], "ISLES2015":[], "TBI":[], "WMH":[]}),
-
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/UNET/UNET_ATLAS_ALL_BATCH_3_BEST_ATLAS.pth", "UNet", 1, {"BRATS":[], "ATLAS":[1], "MSSEG":[], "ISLES2015":[0,1,3,2]}),
 
@@ -266,14 +263,12 @@ if __name__=="__main__":
     
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_ATLAS_TBI_WMH_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     
-    
     # train brats msseg tbi wmh
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_MSSEG_TBI_WMH_BEST_MSSEG.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_MSSEG_TBI_WMH_BEST_TBI.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,0], "TBI":[1,3,5,2], "WMH":[1,3],"camcan":[3,5]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_MSSEG.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,0], "TBI":[1,3,5,2], "WMH":[1,3]}),
-
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/MSFN_ATLAS_20_Epoch_499.pth", "MSFN", 0, { "ATLAS" :[0]} ),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/MSFN_ATLAS_20_PRE_TRAIN_BRATS_MSSEG_TBI_WMH_BEST_ATLAS.pth", "MSFN", 0, { "ATLAS" :[0]} ),
@@ -294,7 +289,6 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/MSFN_WMH_FIRST_20_BEST_WMH.pth", "MSFN", 0, { "WMH" :[0, 1]} ),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/UNET_WMH_FIRST_20_BEST_WMH.pth", "UNet", 2, { "WMH" :[0, 1]} ),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/UNET_WMH_FIRST_20_PRE_TRAIN_BRATS_ATLAS_MSSEG_TBI_BEST_WMH.pth", "UNet", 6, { "WMH" :[1,3]} ),
-    
 
     # TRAIN ALL
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_ISLES_MSSEG_TBI_WMH/UNET_BRATS_ATLAS_ISLES_MSSEG_TBI_WMH_BEST_BRATS.pth", "UNet", 7, {"BRATS":[2,4,5,6], "ATLAS":[4], "MSSEG":[2,4,5,6,0], "ISLES2015":[2,4,6,1], "TBI":[2,4,6,3], "WMH":[2,4]} ),
@@ -319,21 +313,59 @@ if __name__=="__main__":
 
     ]
 
-    device_id = 1
+    #########################################################
+    # *********  ASSUMPTIONS ABOUT THE DATA  **********
+    #########################################################
+    # THE ORDER OF THE MODALITY CHANNELS IN EACH DATASET IS ASSUMED TO BE:
+    # BRATS: ["FLAIR", "T1", "T1c", "T2"]
+    # ATLAS: ["T1"]
+    # MSSEG: ["FLAIR","T1","T1c","T2", "DP"]
+    # ISLES: ["FLAIR", "T1", "T2", "DWI"]
+    # TBI: ["FLAIR", "T1", "T2", "SWI"]
+    # WMH: ["FLAIR", "T1"]
+
+    # note: DP means PD but should be kept like this for now to avoid affecting any previous alphabetical sorting
+
+    #########################################################
+    # *********  CONFIGURABLE PARAMETERS  **********
+    #########################################################
+    save_segs=False
+    save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_ATLAS/UNET/"
+    detect_blobs = False
+    #########################################################
+
+
+    device_id = int(sys.argv[1])
+    datasets_to_test = str(sys.argv[2]) 
+    modalities_to_test = str(sys.argv[3]) # if 012 for BRATS it would mean test on FLAIR, T1, T1c
+    test_all_combinations = bool(sys.argv[4]) # if testing on all possible modality combinations
+
     cuda_id = "cuda:" + str(device_id)
     device = torch.device(cuda_id)
     torch.cuda.set_device(cuda_id)
-
     set_determinism(seed=0)
     print("determinism seed = 0")
-
-    datasets = ["BRATS", "ATLAS", "MSSEG", "ISLES2015", "TBI", "WMH"]
-    #REMOVE THIS
-    datasets = ["ATLAS"]
-
-    dataset_modalities = [[0,1,2,3],[0],[0,1,2,3,4],[0,1,2,3],[0,1,2,3],[0,1]]
-    # REMOVE THIS
-    dataset_modalities = [[0]]
+    
+    datasets = []
+    dataset_modalities = []
+    if "BRATS" in datasets_to_test:
+        datasets.append("BRATS")
+        dataset_modalities.append([0,1,2,3])
+    if "ATLAS" in datasets_to_test:
+        datasets.append("ATLAS")
+        dataset_modalities.append([0])
+    if "MSSEG" in datasets_to_test:
+        datasets.append("MSSEG")
+        dataset_modalities.append([0,1,2,3,4])
+    if "ISLES2015" in datasets_to_test:
+        datasets.append("ISLES2015")
+        dataset_modalities.append([0,1,2,3])
+    if "TBI" in datasets_to_test:
+        datasets.append("TBI")
+        dataset_modalities.append([0,1,2,3])
+    if "WMH" in datasets_to_test:
+        datasets.append("WMH")
+        dataset_modalities.append([0,1])
 
     results = {}
     for net in nets:
@@ -348,13 +380,12 @@ if __name__=="__main__":
         for i, dataset in enumerate(datasets):
             print("************** TESTING DATSET " + dataset + " ***************")
             dataloader = utils.create_dataset(dataset)
-            modalities = utils.create_modality_combinations(dataset_modalities[i])
-            # REMOVE THIS
-            modalities = [(0,)]
-            # modalities = dataset_modalities[i],
+            if test_all_combinations:
+                modalities = utils.create_modality_combinations(dataset_modalities[i])
+            else:
+                modalities = [[int(i) for i in modalities_to_test]]
 
             for combination in modalities:
-                # print(combination)
                 dsc_scores, seg_pix_vols, gt_pix_vols, detected, undetected, det_seg_sizes, undet_seg_sizes = test.test(model,
                     dataloader,
                     dataset,
@@ -362,10 +393,9 @@ if __name__=="__main__":
                     net,
                     device,
                     dataset_modalities[i],
-                    save_outputs=True,
-                    save_path="/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_ATLAS/UNET/",
-                    detect_blobs = False)
-                    # save_path="/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_MSSEG/UNET_All_modalities/UNET_All_modalities_")
+                    save_outputs=save_segs,
+                    save_path=save_path,
+                    detect_blobs = detect_blobs)
  
 
 

@@ -22,7 +22,8 @@ from Nets.multi_scale_fusion_net import MSFN
 from Nets.theory_UNET import theory_UNET
 import utils
 
-def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, is_TBI = False):
+# function that creates the dataloader for training
+def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = False, limited_data_size = 10):
 
     div = total_train_data_size//current_train_data_size
     rem = total_train_data_size%current_train_data_size
@@ -34,11 +35,12 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
 
 
     # /////////// TODO ONLY UNCOMMENT FOR LIMITED DATA /////////////////
-    # print("USING ONLY FIRST 10 IMAGES!!!!!")
-    # train_images = images[:10]
-    # train_segs = segs[:10]
+    if limited_data:
+        print("TRAINING ONLY FIRST " + str(limited_data_size) + " IMAGES!!!!!")
+        train_images = images[:limited_data_train_size]
+        train_segs = segs[:limited_data_train_size]
 
-
+    # image augmentation through spatial cropping to size and by randomly rotating
     train_imtrans = Compose(
         [
             EnsureChannelFirst(strict_check=True),
@@ -47,16 +49,8 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
             RandRotate90(prob=0.1, spatial_axes=(0, 2)),
         ]
     )
-    train_segtrans = Compose(
-        [
-            EnsureChannelFirst(strict_check=True),
-            RandSpatialCrop((cropped_input_size[0], cropped_input_size[1], cropped_input_size[2]), random_size=False),
-            RandRotate90(prob=0.1, spatial_axes=(0, 2)),
-        ]
-    )
     val_imtrans = Compose([EnsureChannelFirst()])
     val_segtrans = Compose([EnsureChannelFirst()])
-
 
     # create a training data loader
     train_ds = ImageDataset(train_images, train_segs, transform=train_imtrans, seg_transform=train_imtrans)
@@ -67,6 +61,7 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
 
     return train_loader, val_loader
 
+# function to randomly set input channels to zero - for use in UNet random dropping
 def rand_set_channels_to_zero(dataset_modalities: list, batch_img_data: torch.Tensor):
     number_of_dropped_modalities = np.random.randint(0,len(dataset_modalities))
     modalities_dropped = random.sample(list(np.arange(len(dataset_modalities))), number_of_dropped_modalities)
@@ -76,6 +71,7 @@ def rand_set_channels_to_zero(dataset_modalities: list, batch_img_data: torch.Te
     
     return modalities_remaining, batch_img_data
 
+# function that randomly removes modalities - for use in non-UNet architectures
 def remove_random_channels(dataset_modalities: list, batch_img_data: torch.Tensor):
     number_of_dropped_modalities = np.random.randint(0,len(dataset_modalities))
     modalities_dropped = random.sample(list(np.arange(len(dataset_modalities))), number_of_dropped_modalities)
@@ -84,6 +80,7 @@ def remove_random_channels(dataset_modalities: list, batch_img_data: torch.Tenso
 
     return modalities_remaining, inputs
 
+# function for augmentation to add a random modality that is a non-linear combination of two others
 def augment(batch_img_data:torch.Tensor):
     modalities_to_merge = random.sample(list(np.arange(batch_img_data.shape[1])),2)
     mod_1 = batch_img_data[:,[modalities_to_merge[0]]]
@@ -93,44 +90,82 @@ def augment(batch_img_data:torch.Tensor):
 
     return batch_img_data
     
+# function maps each dataset's modalities to the correct channels of the input
+def map_channels(dataset_channels, total_modalities):
+        channel_map = []
+        for channel in dataset_channels:
+            for index, modality in enumerate(total_modalities):
+                if channel == modality:
+                    channel_map.append(index)
+        return channel_map
 
+
+# main script
 if __name__ == "__main__":
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     set_determinism(seed=1)
     print("determinism seed = 1")
 
+    # input arguments
     device_id = int(sys.argv[1])
     epochs = int(sys.argv[2])
     save_name = str(sys.argv[3])
     dataset = str(sys.argv[4])
     randomly_drop = bool(int(sys.argv[5]))
-    BRATS_two_channel_seg = bool(int(sys.argv[6]))
-    lr_lower_lim = float(sys.argv[7])
-    model_type = str(sys.argv[8])
-    augment_modalities = bool(int(sys.argv[9]))
-    is_cluster = bool(int(sys.argv[10]))
 
-    # device_id = 1
-    # epochs = 1000
-    # save_name = "DELETE"
-    # # modalities = "0123"
-    # dataset = "BRATS_TBI"
-    # randomly_drop = 1
-    # BRATS_two_channel_seg = 1
-    # lr_lower_lim = 1e-5
-    # model_type = "MSFN"
-    # augment_modalities = False
+    #########################################################
+    # *********  ASSUMPTIONS ABOUT THE DATA  **********
+    #########################################################
+    # THE ORDER OF THE MODALITY CHANNELS IN EACH DATASET IS ASSUMED TO BE:
+    # BRATS: ["FLAIR", "T1", "T1c", "T2"]
+    # ATLAS: ["T1"]
+    # MSSEG: ["FLAIR","T1","T1c","T2", "DP"]
+    # ISLES: ["FLAIR", "T1", "T2", "DWI"]
+    # TBI: ["FLAIR", "T1", "T2", "SWI"]
+    # WMH: ["FLAIR", "T1"]
 
-    print("lr lower lim: ", lr_lower_lim)
+    # note: DP means PD but should be kept like this for now to avoid affecting any previous alphabetical sorting
+
+    #########################################################
+    # *********  START OF CONFIGURABLE PARAMETERS  **********
+    #########################################################
 
     workers = 3
     train_batch_size = 3
-    cropped_input_size = [128,128,128]
-    val_interval = 1
+    val_interval = 2
     lr = 1e-3
-    crop_on_label = False
-    TBI_multi_channel_seg = True
+
+    # settings for refinement training from a pre-trained model
+    load_pre_trained_model = False
+    load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
+    manual_channel_map = [1,3,5,2] # the slots the modalities of the new dataset should be placed in
+    modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] # the modalities the model was trained on (alphabetical order necessary)
+
+    # settings if training on limited data
+    train_limited_data = False
+    limited_data_train_size = 10 #number of training images to use if training on limited data
+
+    # settings if doing stepwise drop of learning rate
+    drop_learning_rate = True
+    drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
+    drop_learning_rate_value = 1e-4 # learning rate to drop to
+
+    # set true if using the older unet (net in file UNetv2.py)
+    legacy_unet = False
+
+    # parameters that are unlikely to be needed
+    is_cluster = False # if training on IBME cluster filepaths
+    BRATS_two_channel_seg = False # if using different segmentation ground truths if both T2 and FLAIR are missing then ground truth is without edema
+    TBI_multi_channel_seg = True # similar to above but for TBI dataset and SWI missing
+    model_type = "UNET" # change this if training a different model
+    augment_modalities = False # if True, randomly add a non-linear combination of modalities to the training set for augmentation
+    cropped_input_size = [128,128,128] 
+    crop_on_label = False # True if random cropping to size should be done centred on areas of lesion
+
+    #########################################################
+    # *********  END OF CONFIGURABLE PARAMETERS  **********
+    #########################################################
 
     print("lr: ",lr)
     print("Workers: ", workers)
@@ -148,6 +183,7 @@ if __name__ == "__main__":
         img_index = 0
         label_index = 1
 
+    # total number of images in the datasets
     total_size_BRATS = 484
     total_size_ATLAS = 654
     total_size_MSSEG = 53
@@ -155,6 +191,7 @@ if __name__ == "__main__":
     total_size_TBI = 281
     total_size_WMH = 60
 
+    # number of images in the training partition - i.e. excluding validation set
     train_size_BRATS = 444
     train_size_ATLAS = 459
     train_size_MSSEG = 37
@@ -162,6 +199,7 @@ if __name__ == "__main__":
     train_size_TBI = 156
     train_size_WMH = 42
 
+    # the set of modalities in each dataset
     channels_BRATS = ["FLAIR", "T1", "T1c", "T2"]
     channels_ATLAS = ["T1"]
     channels_MSSEG = ["FLAIR","T1","T1c","T2","DP"]
@@ -169,20 +207,14 @@ if __name__ == "__main__":
     channels_TBI = ["FLAIR", "T1", "T2", "SWI"]
     channels_WMH = ["FLAIR", "T1"]
 
+    # calculates the overlapping number of images in a combination of datasets - e.g. if BRATS and ATLAS, it will be the train size of ATLAS (459)
     data_size = max(("BRATS" in dataset) * train_size_BRATS, ("ATLAS" in dataset) * train_size_ATLAS, ("MSSEG" in dataset) * train_size_MSSEG, ("ISLES" in dataset) * train_size_ISLES, ("TBI" in dataset) * train_size_TBI, ("WMH" in dataset) * train_size_WMH)
     
+    # finds the union of modalities across datasets
     total_modalities = set(("BRATS" in dataset) * channels_BRATS).union(set(("ATLAS" in dataset) * channels_ATLAS)).union(set(("MSSEG" in dataset) * channels_MSSEG)).union(set(("ISLES" in dataset) * channels_ISLES)).union(set(("TBI" in dataset) * channels_TBI)).union(set(("WMH" in dataset) * channels_WMH))
     total_modalities = sorted(list(total_modalities))
-    
 
-    def map_channels(dataset_channels, total_modalities):
-        channel_map = []
-        for channel in dataset_channels:
-            for index, modality in enumerate(total_modalities):
-                if channel == modality:
-                    channel_map.append(index)
-        return channel_map
-
+    # generate the mappings of each dataset to the network input channels
     BRATS_channel_map = map_channels(channels_BRATS, total_modalities)
     ATLAS_channel_map = map_channels(channels_ATLAS, total_modalities)
     MSSEG_channel_map = map_channels(channels_MSSEG, total_modalities)
@@ -190,13 +222,18 @@ if __name__ == "__main__":
     TBI_channel_map = map_channels(channels_TBI, total_modalities)
     WMH_channel_map = map_channels(channels_WMH, total_modalities)
 
+    # manually set channel mapping if using a pre-trained model for refinement
+    if load_pre_trained_model:
+        print("MANUALLY SETTING CHANNEL MAP")
+        BRATS_channel_map = manual_channel_map
+        ATLAS_channel_map = manual_channel_map
+        MSSEG_channel_map = manual_channel_map
+        ISLES_channel_map = manual_channel_map
+        TBI_channel_map = manual_channel_map
+        WMH_channel_map = manual_channel_map
 
-    # //////// ONLY IF MANUALLY SETTING CHANNELS FOR REFINEMENT/////////////
-    # /////////////////////////////////////////
-    # /////////////////////////////////////////
-    # print("MANUALLY SETTING CHANNEL MAP")
-    # ISLES_channel_map = [1,3,5,2]
-    # total_modalities = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+        total_modalities = modalities_when_trained
+
     
     print("Total modalities: ", total_modalities)
     print("BRATS channel map: ", BRATS_channel_map)
@@ -206,11 +243,12 @@ if __name__ == "__main__":
     print("TBI channel map: ", TBI_channel_map)
     print("WMH channel map: ", WMH_channel_map)
 
-    
+    # arrays to store the dataloaders for each dataset and map them
     train_loaders = []
     val_loaders = []
     data_loader_map = {}
 
+    # BRATS specific setup
     if "BRATS" in dataset:
         print("Training BRATS")
         val_size = total_size_BRATS-train_size_BRATS
@@ -242,6 +280,7 @@ if __name__ == "__main__":
         train_loaders.append(train_loader_BRATS)
         val_loaders.append(val_loader_BRATS)
 
+    # ATLAS specific setup
     if "ATLAS" in dataset:
         print("Training ATLAS")
         val_size = total_size_ATLAS-train_size_ATLAS
@@ -263,6 +302,7 @@ if __name__ == "__main__":
         train_loaders.append(train_loader_ATLAS)
         val_loaders.append(val_loader_ATLAS)
 
+    # MSSEG specific setup
     if "MSSEG" in dataset:
         print("Training MSSEG")
         val_size = total_size_MSSEG-train_size_MSSEG
@@ -285,6 +325,7 @@ if __name__ == "__main__":
         train_loaders.append(train_loader_MSSEG)
         val_loaders.append(val_loader_MSSEG)
 
+    # ISLES specific setup
     if "ISLES" in dataset:
         print("Training ISLES")
         val_size = total_size_ISLES-train_size_ISLES
@@ -307,6 +348,7 @@ if __name__ == "__main__":
         train_loaders.append(train_loader_ISLES)
         val_loaders.append(val_loader_ISLES)
 
+    # TBI specific setup
     if "TBI" in dataset:
         print("Training TBI")
         val_size = total_size_TBI-train_size_TBI
@@ -370,6 +412,7 @@ if __name__ == "__main__":
         train_loaders.append(train_loader_TBI)
         val_loaders.append(val_loader_TBI)
 
+    # WMH speceific setup
     if "WMH" in dataset:
         print("Training WMH")
         val_size = total_size_WMH-train_size_WMH
@@ -394,9 +437,9 @@ if __name__ == "__main__":
         val_loaders.append(val_loader_WMH)
 
 
-
     # ////////////////// ONLY FOR LIMITED DATA  ////////////
-    # data_size = 10
+    if train_limited_data:
+        data_size = limited_data_train_size
 
     print("Running on GPU:" + str(device_id))
     print("Running for epochs:" + str(epochs))
@@ -408,21 +451,32 @@ if __name__ == "__main__":
     dice_metric = DiceMetric(include_background=True, reduction="mean", get_not_nans=False)
     post_trans = Compose([Activations(sigmoid=True), AsDiscrete(threshold=0.5)])
 
-    # create UNet, DiceLoss and Adam optimizer
-    print("Layers: 16,32,64,128,256")
-    print("Dropout: 0.2")
+    print("in_channels=",len(total_modalities))
+    print("batch size = ",train_batch_size)
 
+    # configuration for different network architectures
     if model_type == "UNET":
         print("TRAINING WITH UNET")
-        print("training with unet")
-        model = theory_UNET(in_channels=len(total_modalities)).to(device)
 
-        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
-        print("LOADING MODEL: ", load_model_path)
-        model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+        if not legacy_unet:
+            model = theory_UNET(in_channels=len(total_modalities)).to(device)
+        else:
+            model = UNetv2(
+                spatial_dims=3,
+                in_channels=len(total_modalities),
+                out_channels=1,
+                kernel_size = (3,3,3),
+                channels=(16, 32, 64, 128, 256),
+                strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
+                num_res_units=2,
+                dropout=0.2,
+            ).to(device)
+
+        if load_pre_trained_model:
+            print("LOADING MODEL: ", load_model_path)
+            model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "HEMIS_spatial_attention":
         print("TRAINING WITH HEMIS SPATIAL ATTENTION")
- 
         model = HEMISv2(
             post_seg_res_units=False,
             fusion_type="spatial attention",
@@ -435,35 +489,24 @@ if __name__ == "__main__":
             pred_uncertainty=False,
             grid_UNet=True,
         ).to(device)
-
-        #///////////////////////////////////////////////////
-        #///////////////////////////////////////////////////
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/HEM_SPATIAL_ATTENTION/RAND/HEM_Spatial_Attention_BRATS_ATLAS_MSSEG_RAND_BEST_BRATS.pth"
-        # print("LOADING MODEL: ", load_model_path)
-        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFN":
         model = MSFN(paired=False).to(device)
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/MSFN/MSFN_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
-        # print("LOADING MODEL: ", load_model_path)
-        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
     elif model_type == "MSFNP":
         model = MSFN(paired=True).to(device)
-        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/MSFNP/MSFN_PAIRED_BRATS_ATLAS_MSSEG_RAND_BEST_ATLAS.pth"
-        # print("LOADING MODEL: ", load_model_path)
-        # model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
 
-    # model_path = "/home/sedm6251/projectMaterial/baseline_models/BRATS_Decathlon_2016_17/Single_Unet_modality_1_T1w_brain_mask_normed.pth"
-    # model.load_state_dict(torch.load(model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+    # load pre-trained weights
+    if load_pre_trained_model:
+            print("LOADING MODEL: ", load_model_path)
+            model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+
+    # defined loss function and optimiser
     loss_function = DiceLoss(sigmoid=True)
-    # loss_function = monai.losses.DiceLoss(sigmoid=True)
-    
-    
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+
     # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode="max", factor=0.2, patience=10, verbose=True,min_lr=lr_lower_lim)
     # cyclic_scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer=optimizer, base_lr=1e-4, max_lr=1e-3, step_size_up=200, mode="triangular",cycle_momentum=False)
-    print("in_channels=",len(total_modalities))
-    print("batch size = ",train_batch_size)
     
+    # initialise best metric variables
     best_metric_BRATS = -1
     best_metric_ATLAS = -1
     best_metric_MSSEG = -1
@@ -480,14 +523,16 @@ if __name__ == "__main__":
 
     metric_values = list()
 
+    # create save names for tensorboard logging
     if is_cluster:
         log_save = "/users/sedm6251/tests/runs/" + save_name
         model_save_path = "/users/sedm6251/tests/"
     else:
         log_save = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/runs/" + save_name
         model_save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/"
-
     writer = SummaryWriter(log_dir=log_save)
+
+    # start training cycle
     for epoch in range(epochs):
         print("-" * 10)
         print(f"epoch {epoch + 1}/{epochs}")
@@ -495,10 +540,12 @@ if __name__ == "__main__":
         epoch_loss = 0
         step = 0
 
-        if epoch == 150:
+        # drop learning rate if desired
+        if drop_learning_rate and epoch == drop_learning_rate_epoch:
             for g in optimizer.param_groups:
-                g['lr'] = 1e-4
+                g['lr'] = drop_learning_rate_value
 
+        # each training loader is zipped together - there are different loaders for each dataset
         for batch_data in zip(*train_loaders):
  
             step += 1
@@ -506,6 +553,7 @@ if __name__ == "__main__":
             outputs = []
             labels = []
 
+            # dataset-specific handling of training data - TODO merge all into one function - evolved organically and is messy
             if "BRATS" in dataset:
                 loader_index = data_loader_map["BRATS"]
                 batch = batch_data[loader_index]
@@ -983,12 +1031,8 @@ if __name__ == "__main__":
                     )
                     writer.add_scalar("val_mean_dice_WMH", metric_WMH, epoch_len * (epoch+1))
 
-                
-
                 # scheduler.step(metric,epoch=epoch)
                 # writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * (epoch+1))
-
-
 
 
     # print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
