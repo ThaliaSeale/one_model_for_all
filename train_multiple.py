@@ -132,7 +132,7 @@ if __name__ == "__main__":
     #########################################################
 
     workers = 3
-    train_batch_size = 3
+    train_batch_size = 2
     val_interval = 2
     lr = 1e-3
 
@@ -528,8 +528,8 @@ if __name__ == "__main__":
         log_save = "/users/sedm6251/tests/runs/" + save_name
         model_save_path = "/users/sedm6251/tests/"
     else:
-        log_save = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/runs/" + save_name
-        model_save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/"
+        log_save = "/home/thalia/one_model_for_all/results/" + save_name + "/log/"
+        model_save_path = "/home/thalia/one_model_for_all/results/" + save_name + "/models/" 
     writer = SummaryWriter(log_dir=log_save)
 
     # start training cycle
