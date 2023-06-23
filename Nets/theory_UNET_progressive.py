@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from Nets.updated_res_units import ResidualUnit, Convolution
 
-class theory_UNET(nn.Module):
+class theory_UNET_progressive(nn.Module):
 
     def __init__(self,
         in_channels: int,
@@ -62,29 +62,5 @@ class theory_UNET(nn.Module):
         return up_out_4
 
 
-theory_UNET = theory_UNET
-
-class theory_UNET_progressive(theory_UNET):
-    pass
-
-    def forward(self, x: torch.Tensor, features: list) -> torch.Tensor:
-        
-        conv_out_1 = self.conv_1(x)
-        conv_out_2 = self.conv_2(conv_out_1)
-        conv_out_3 = self.conv_3(conv_out_2)
-        conv_out_4 = self.conv_4(conv_out_3)
-        conv_out_5 = self.conv_5(conv_out_4)
-
-        up_in_1 = torch.cat((conv_out_5,conv_out_4),dim=1)
-        up_out_1 = self.up_stage_1(up_in_1)
-
-        up_in_2 = torch.cat((up_out_1,conv_out_3),dim=1)
-        up_out_2 = self.up_stage_2(up_in_2)
-
-        up_in_3 = torch.cat((up_out_2,conv_out_2),dim=1)
-        up_out_3 = self.up_stage_3(up_in_3)
-
-        up_in_4 = torch.cat((up_out_3,conv_out_1),dim=1)
-        up_out_4 = self.up_stage_4(up_in_4)
-
-        return up_out_4
+# theory_UNET = theory_UNET
+theory_UNET_progressive = theory_UNET_progressive
