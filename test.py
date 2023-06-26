@@ -41,15 +41,12 @@ def test(model, val_loader, dataset_name, modalities, net, device, modalities_pr
       sw_batch_size = 1
 
       if net.net_type == "UNet" or net.net_type == "UNetv2":
-        val_data[0] = utils.create_UNET_input(val_data, modalities, dataset_name, net, modalities_present_at_training)
-        # val_data[0] = val_data[0][:,[0,1,2,3]]        
+        val_data[0] = utils.create_UNET_input(val_data, modalities, dataset_name, net, modalities_present_at_training)      
       else:
         val_data[0] = val_data[0][:,modalities,:,:,:]
 
-        val_images, val_labels = val_data[0].to(device), val_data[1].to(device)
-
-        val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
-      
+      val_images, val_labels = val_data[0].to(device), val_data[1].to(device)
+      val_outputs = sliding_window_inference(val_images, roi_size, sw_batch_size, model)
       val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
 
       if save_outputs:
