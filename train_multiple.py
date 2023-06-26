@@ -529,7 +529,10 @@ if __name__ == "__main__":
         model_save_path = "/users/sedm6251/tests/"
     else:
         log_save = "/home/thalia/one_model_for_all/results/" + save_name + "/log/"
-        model_save_path = "/home/thalia/one_model_for_all/results/" + save_name + "/models/" 
+        model_save_path = "/home/thalia/one_model_for_all/results/" + save_name + "/model/" 
+        # check directory exists and if not create directory
+        if not os.path.exists(model_save_path):
+            os.makedirs(model_save_path)
     writer = SummaryWriter(log_dir=log_save)
 
     # start training cycle
