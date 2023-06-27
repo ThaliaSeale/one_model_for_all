@@ -4,7 +4,7 @@ import torch
 
 import random
 
-device = torch.device("cuda:0")
+device = torch.device("cuda:1")
 
 model = theory_UNET_progressive(
     in_channels = 6
@@ -18,7 +18,6 @@ x = torch.ones(2, 6, 128, 128, 128)
 x = x.to(device)
 
 features = list()
-features.append(torch.zeros(2, 6, 128, 128, 128))
 features.append(torch.ones(2, 16, 64, 64, 64)*1)
 features.append(torch.ones(2, 32, 32, 32, 32)*2)
 features.append(torch.ones(2, 64, 16, 16, 16)*3)
