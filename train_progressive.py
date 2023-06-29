@@ -1,6 +1,7 @@
 import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader, PatchIter, GridPatchDataset
-from monai.inferers import sliding_window_inference
+# from monai.inferers import sliding_window_inference
+from sliding_window_progressive import sliding_window_inference_progressive
 from monai.metrics import DiceMetric
 from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop, RandCropByPosNegLabel
 from monai.utils import set_determinism
@@ -23,7 +24,8 @@ from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
 import utils
 
 # function that creates the dataloader for training
-def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = False, limited_data_size = 10):
+# def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = False, limited_data_size = 10):
+def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = True, limited_data_size = 20):
 
     div = total_train_data_size//current_train_data_size
     rem = total_train_data_size%current_train_data_size
@@ -37,8 +39,8 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
     # /////////// TODO ONLY UNCOMMENT FOR LIMITED DATA /////////////////
     if limited_data:
         print("TRAINING ONLY FIRST " + str(limited_data_size) + " IMAGES!!!!!")
-        train_images = images[:limited_data_train_size]
-        train_segs = segs[:limited_data_train_size]
+        train_images = images[:limited_data_size]
+        train_segs = segs[:limited_data_size]
 
     # image augmentation through spatial cropping to size and by randomly rotating
     train_imtrans = Compose(
@@ -104,7 +106,7 @@ def get_features(name):
         features[name] = output.detach()
     return hook
 
-def extract_features(layers):
+def extract_features(input_data,layers):
     out = pretrained_model(input_data)
     pretrained_model_features = list()
     for layer in layers:
@@ -148,6 +150,7 @@ if __name__ == "__main__":
     lr = 1e-3
 
     pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
+    print("LOADING PRETRAINED MODEL:", pretrained_model_path)
     manual_channel_map = [2,4] # not sure if I did this correctly
     modalities_when_trained =  ['DP', 'DWI', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
 
@@ -736,282 +739,283 @@ if __name__ == "__main__":
                 label = batch[label_index].to(device)
                 
                 # extract features
-                pretrained_model_features = extract_features(layers)
+                pretrained_model_features = extract_features(input_data,layers)
                 # print(pretrained_model_features)
                 out = model(input_data,pretrained_model_features)
                 # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
-                # outputs.append(out)
-                # labels.append(label)
+                outputs.append(out)
+                labels.append(label)
 
 
 
-    #         optimizer.zero_grad()
+            optimizer.zero_grad()
 
-    #         combined_outs = torch.cat(outputs, dim=0)
-    #         combined_labels = torch.cat(labels,dim=0)
+            combined_outs = torch.cat(outputs, dim=0)
+            combined_labels = torch.cat(labels,dim=0)
 
-    #         loss = loss_function(combined_outs, combined_labels)
-    #         loss.backward()
-    #         optimizer.step()
-    #         epoch_loss += loss.item()
-    #         epoch_len = data_size  // train_batch_size
-    #         print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
-    #         writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
-    #         writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * epoch + step)
-    #         # cyclic_scheduler.step()
+            loss = loss_function(combined_outs, combined_labels)
+            loss.backward()
+            optimizer.step()
+            epoch_loss += loss.item()
+            epoch_len = data_size  // train_batch_size
+            print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
+            writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
+            writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * epoch + step)
+            # cyclic_scheduler.step()
             
-    #     epoch_loss /= step
-    #     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+        epoch_loss /= step
+        print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
 
-    #     if (epoch+1) % 50 == 0:
+        if (epoch+1) % 50 == 0:
             
-    #         model_save_name = model_save_path + save_name + "_Epoch_" + str(epoch) + ".pth"
-    #         torch.save(model.state_dict(), model_save_name)
-    #         print("Saved Model")
+            model_save_name = model_save_path + save_name + "_Epoch_" + str(epoch) + ".pth"
+            torch.save(model.state_dict(), model_save_name)
+            print("Saved Model")
 
-    #     if (epoch + 1) % val_interval == 0:
-    #         model.eval()
-    #         with torch.no_grad():
-    #             seg_channel = 0
-    #             val_images = None
-    #             val_labels = None
-    #             val_outputs = None
+        if (epoch + 1) % val_interval == 0:
+            model.eval()
+            with torch.no_grad():
+                seg_channel = 0
+                val_images = None
+                val_labels = None
+                val_outputs = None
 
-    #             dice_metric.reset()
+                dice_metric.reset()
 
-    #             if "BRATS" in dataset:
+                if "BRATS" in dataset:
 
-    #                 loader_index = data_loader_map["BRATS"]
-    #                 for val_data in val_loader_BRATS:
-    #                     if model_type == "UNET":
-    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
-    #                         input_data[:,BRATS_channel_map,:,:,:] = val_data[0]
-    #                     else:
-    #                         input_data = val_data[0]
-    #                     input_data = input_data.to(device)
+                    loader_index = data_loader_map["BRATS"]
+                    for val_data in val_loader_BRATS:
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,BRATS_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
 
-    #                     if BRATS_two_channel_seg:
-    #                         label = val_data[1][:,[0],:,:,:].to(device)
-    #                     else:
-    #                         label = val_data[1].to(device)
+                        if BRATS_two_channel_seg:
+                            label = val_data[1][:,[0],:,:,:].to(device)
+                        else:
+                            label = val_data[1].to(device)
                         
-    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
-    #                     sw_batch_size = 1
-    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
-    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
-    #                     # compute metric for current iteration
-    #                     dice_metric(y_pred=val_outputs, y=label)
-    #                 metric_BRATS = dice_metric.aggregate().item()
-    #                 # reset the status for next validation round
-    #                 dice_metric.reset()
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_BRATS = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
 
-    #                 if metric_BRATS > best_metric_BRATS:
-    #                     best_metric_BRATS = metric_BRATS
-    #                     best_metric_epoch_BRATS = epoch + 1
-    #                     if epoch>1:
-    #                         model_save_name = model_save_path + save_name + "_BEST_BRATS.pth"
-    #                         torch.save(model.state_dict(), model_save_name)
-    #                         print("saved new best metric model for BRATS")
-    #                 print(
-    #                     "current epoch: {} current mean dice BRATS: {:.4f} best mean dice BRATS: {:.4f} at epoch {}".format(
-    #                         epoch + 1, metric_BRATS, best_metric_BRATS, best_metric_epoch_BRATS
-    #                     )
-    #                 )
-    #                 writer.add_scalar("val_mean_dice_BRATS", metric_BRATS, epoch_len * (epoch+1))
+                    if metric_BRATS > best_metric_BRATS:
+                        best_metric_BRATS = metric_BRATS
+                        best_metric_epoch_BRATS = epoch + 1
+                        if epoch>1:
+                            model_save_name = model_save_path + save_name + "_BEST_BRATS.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model for BRATS")
+                    print(
+                        "current epoch: {} current mean dice BRATS: {:.4f} best mean dice BRATS: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_BRATS, best_metric_BRATS, best_metric_epoch_BRATS
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_BRATS", metric_BRATS, epoch_len * (epoch+1))
                     
-    #             if "ATLAS" in dataset:
+                if "ATLAS" in dataset:
 
-    #                 loader_index = data_loader_map["ATLAS"]
-    #                 for val_data in val_loader_ATLAS:
-    #                     # batch = val_data[loader_index]
-    #                     if model_type == "UNET":
-    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
-    #                         input_data[:,ATLAS_channel_map,:,:,:] = val_data[0]
-    #                     else:
-    #                         input_data = val_data[0]
-    #                     input_data = input_data.to(device)
-    #                     label = val_data[1].to(device)
+                    loader_index = data_loader_map["ATLAS"]
+                    for val_data in val_loader_ATLAS:
+                        # batch = val_data[loader_index]
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,ATLAS_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
+                        label = val_data[1].to(device)
                         
-    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
-    #                     sw_batch_size = 1
-    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
-    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
-    #                     # compute metric for current iteration
-    #                     dice_metric(y_pred=val_outputs, y=label)
-    #                 metric_ATLAS = dice_metric.aggregate().item()
-    #                 # reset the status for next validation round
-    #                 dice_metric.reset()
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_ATLAS = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
 
-    #                 if metric_ATLAS > best_metric_ATLAS:
-    #                     best_metric_ATLAS = metric_ATLAS
-    #                     best_metric_epoch_ATLAS = epoch + 1
-    #                     if epoch>1:
-    #                         model_save_name = model_save_path + save_name + "_BEST_ATLAS.pth"
-    #                         torch.save(model.state_dict(), model_save_name)
-    #                         print("saved new best metric model")
-    #                 print(
-    #                     "current epoch: {} current mean dice ATLAS: {:.4f} best mean dice ATLAS: {:.4f} at epoch {}".format(
-    #                         epoch + 1, metric_ATLAS, best_metric_ATLAS, best_metric_epoch_ATLAS
-    #                     )
-    #                 )
-    #                 writer.add_scalar("val_mean_dice_ATLAS", metric_ATLAS, epoch_len * (epoch+1))
+                    if metric_ATLAS > best_metric_ATLAS:
+                        best_metric_ATLAS = metric_ATLAS
+                        best_metric_epoch_ATLAS = epoch + 1
+                        if epoch>1:
+                            model_save_name = model_save_path + save_name + "_BEST_ATLAS.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model")
+                    print(
+                        "current epoch: {} current mean dice ATLAS: {:.4f} best mean dice ATLAS: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_ATLAS, best_metric_ATLAS, best_metric_epoch_ATLAS
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_ATLAS", metric_ATLAS, epoch_len * (epoch+1))
 
-    #             if "MSSEG" in dataset:
+                if "MSSEG" in dataset:
 
-    #                 loader_index = data_loader_map["MSSEG"]
-    #                 for val_data in val_loader_MSSEG:
-    #                     # batch = val_data[loader_index]
-    #                     if model_type == "UNET":
-    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
-    #                         input_data[:,MSSEG_channel_map,:,:,:] = val_data[0]
-    #                     else:
-    #                         input_data = val_data[0]
-    #                     input_data = input_data.to(device)
-    #                     label = val_data[1].to(device)
+                    loader_index = data_loader_map["MSSEG"]
+                    for val_data in val_loader_MSSEG:
+                        # batch = val_data[loader_index]
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,MSSEG_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
+                        label = val_data[1].to(device)
                         
-    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
-    #                     sw_batch_size = 1
-    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
-    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
-    #                     # compute metric for current iteration
-    #                     dice_metric(y_pred=val_outputs, y=label)
-    #                 metric_MSSEG = dice_metric.aggregate().item()
-    #                 # reset the status for next validation round
-    #                 dice_metric.reset()
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_MSSEG = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
 
-    #                 if metric_MSSEG > best_metric_MSSEG:
-    #                     best_metric_MSSEG = metric_MSSEG
-    #                     best_metric_epoch_MSSEG = epoch + 1
-    #                     if epoch>1:
-    #                         model_save_name = model_save_path + save_name + "_BEST_MSSEG.pth"
-    #                         torch.save(model.state_dict(), model_save_name)
-    #                         print("saved new best metric model")
-    #                 print(
-    #                     "current epoch: {} current mean dice MSSEG: {:.4f} best mean dice MSSEG: {:.4f} at epoch {}".format(
-    #                         epoch + 1, metric_MSSEG, best_metric_MSSEG, best_metric_epoch_MSSEG
-    #                     )
-    #                 )
-    #                 writer.add_scalar("val_mean_dice_MSSEG", metric_MSSEG, epoch_len * (epoch+1))
+                    if metric_MSSEG > best_metric_MSSEG:
+                        best_metric_MSSEG = metric_MSSEG
+                        best_metric_epoch_MSSEG = epoch + 1
+                        if epoch>1:
+                            model_save_name = model_save_path + save_name + "_BEST_MSSEG.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model")
+                    print(
+                        "current epoch: {} current mean dice MSSEG: {:.4f} best mean dice MSSEG: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_MSSEG, best_metric_MSSEG, best_metric_epoch_MSSEG
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_MSSEG", metric_MSSEG, epoch_len * (epoch+1))
 
-    #             if "ISLES" in dataset:
+                if "ISLES" in dataset:
 
-    #                 loader_index = data_loader_map["ISLES"]
-    #                 for val_data in val_loader_ISLES:
-    #                     # batch = val_data[loader_index]
-    #                     if model_type == "UNET":
-    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
-    #                         input_data[:,ISLES_channel_map,:,:,:] = val_data[0]
-    #                     else:
-    #                         input_data = val_data[0]
-    #                     input_data = input_data.to(device)
-    #                     label = val_data[1].to(device)
+                    loader_index = data_loader_map["ISLES"]
+                    for val_data in val_loader_ISLES:
+                        # batch = val_data[loader_index]
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,ISLES_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
+                        label = val_data[1].to(device)
                         
-    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
-    #                     sw_batch_size = 1
-    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
-    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
-    #                     # compute metric for current iteration
-    #                     dice_metric(y_pred=val_outputs, y=label)
-    #                 metric_ISLES = dice_metric.aggregate().item()
-    #                 # reset the status for next validation round
-    #                 dice_metric.reset()
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_ISLES = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
 
-    #                 if metric_ISLES > best_metric_ISLES:
-    #                     best_metric_ISLES = metric_ISLES
-    #                     best_metric_epoch_ISLES = epoch + 1
-    #                     if epoch>1:
-    #                         model_save_name = model_save_path + save_name + "_BEST_ISLES.pth"
-    #                         torch.save(model.state_dict(), model_save_name)
-    #                         print("saved new best metric model")
-    #                 print(
-    #                     "current epoch: {} current mean dice ISLES: {:.4f} best mean dice ISLES: {:.4f} at epoch {}".format(
-    #                         epoch + 1, metric_ISLES, best_metric_ISLES, best_metric_epoch_ISLES
-    #                     )
-    #                 )
-    #                 writer.add_scalar("val_mean_dice_ISLES", metric_ISLES, epoch_len * (epoch+1))
+                    if metric_ISLES > best_metric_ISLES:
+                        best_metric_ISLES = metric_ISLES
+                        best_metric_epoch_ISLES = epoch + 1
+                        if epoch>1:
+                            model_save_name = model_save_path + save_name + "_BEST_ISLES.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model")
+                    print(
+                        "current epoch: {} current mean dice ISLES: {:.4f} best mean dice ISLES: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_ISLES, best_metric_ISLES, best_metric_epoch_ISLES
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_ISLES", metric_ISLES, epoch_len * (epoch+1))
 
-    #             if "TBI" in dataset:
+                if "TBI" in dataset:
 
-    #                 loader_index = data_loader_map["TBI"]
-    #                 for val_data in val_loader_TBI:
-    #                     # batch = val_data[loader_index]
-    #                     if model_type == "UNET":
-    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
-    #                         input_data[:,TBI_channel_map,:,:,:] = val_data[0]
-    #                     else:
-    #                         input_data = val_data[0]
-    #                     input_data = input_data.to(device)
+                    loader_index = data_loader_map["TBI"]
+                    for val_data in val_loader_TBI:
+                        # batch = val_data[loader_index]
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,TBI_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
 
-    #                     if TBI_multi_channel_seg:
-    #                         label = val_data[1][:,[2],:,:,:].to(device)
-    #                     else:
-    #                         label = val_data[1].to(device)
-    #                     # label = val_data[1].to(device)
+                        if TBI_multi_channel_seg:
+                            label = val_data[1][:,[2],:,:,:].to(device)
+                        else:
+                            label = val_data[1].to(device)
+                        # label = val_data[1].to(device)
                         
-    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
-    #                     sw_batch_size = 1
-    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
-    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
-    #                     # compute metric for current iteration
-    #                     dice_metric(y_pred=val_outputs, y=label)
-    #                 metric_TBI = dice_metric.aggregate().item()
-    #                 # reset the status for next validation round
-    #                 dice_metric.reset()
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_TBI = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
 
-    #                 if metric_TBI > best_metric_TBI:
-    #                     best_metric_TBI = metric_TBI
-    #                     best_metric_epoch_TBI = epoch + 1
-    #                     if epoch>1:
-    #                         model_save_name = model_save_path + save_name + "_BEST_TBI.pth"
-    #                         torch.save(model.state_dict(), model_save_name)
-    #                         print("saved new best metric model")
-    #                 print(
-    #                     "current epoch: {} current mean dice TBI: {:.4f} best mean dice TBI: {:.4f} at epoch {}".format(
-    #                         epoch + 1, metric_TBI, best_metric_TBI, best_metric_epoch_TBI
-    #                     )
-    #                 )
-    #                 writer.add_scalar("val_mean_dice_TBI", metric_TBI, epoch_len * (epoch+1))
+                    if metric_TBI > best_metric_TBI:
+                        best_metric_TBI = metric_TBI
+                        best_metric_epoch_TBI = epoch + 1
+                        if epoch>1:
+                            model_save_name = model_save_path + save_name + "_BEST_TBI.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model")
+                    print(
+                        "current epoch: {} current mean dice TBI: {:.4f} best mean dice TBI: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_TBI, best_metric_TBI, best_metric_epoch_TBI
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_TBI", metric_TBI, epoch_len * (epoch+1))
 
-    #             if "WMH" in dataset:
+                if "WMH" in dataset:
 
-    #                 loader_index = data_loader_map["WMH"]
-    #                 for val_data in val_loader_WMH:
-    #                     # batch = val_data[loader_index]
-    #                     if model_type == "UNET":
-    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
-    #                         input_data[:,WMH_channel_map,:,:,:] = val_data[0]
-    #                     else:
-    #                         input_data = val_data[0]
-    #                     input_data = input_data.to(device)
-    #                     label = val_data[1].to(device)
+                    loader_index = data_loader_map["WMH"]
+                    for val_data in val_loader_WMH:
+                        # batch = val_data[loader_index]
+                        if model_type == "UNET":
+                            input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+                            input_data[:,WMH_channel_map,:,:,:] = val_data[0]
+                        else:
+                            input_data = val_data[0]
+                        input_data = input_data.to(device)
+                        label = val_data[1].to(device)
                         
-    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
-    #                     sw_batch_size = 1
-    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
-    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
-    #                     # compute metric for current iteration
-    #                     dice_metric(y_pred=val_outputs, y=label)
-    #                 metric_WMH = dice_metric.aggregate().item()
-    #                 # reset the status for next validation round
-    #                 dice_metric.reset()
+                        roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+                        sw_batch_size = 1
+                        # val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+                        val_outputs = sliding_window_inference_progressive(input_data, roi_size, sw_batch_size, pretrained_model, layers, model)
+                        val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+                        # compute metric for current iteration
+                        dice_metric(y_pred=val_outputs, y=label)
+                    metric_WMH = dice_metric.aggregate().item()
+                    # reset the status for next validation round
+                    dice_metric.reset()
 
-    #                 if metric_WMH > best_metric_WMH:
-    #                     best_metric_WMH = metric_WMH
-    #                     best_metric_epoch_WMH = epoch + 1
-    #                     if epoch>1:
-    #                         model_save_name = model_save_path + save_name + "_BEST_WMH.pth"
-    #                         torch.save(model.state_dict(), model_save_name)
-    #                         print("saved new best metric model")
-    #                 print(
-    #                     "current epoch: {} current mean dice WMH: {:.4f} best mean dice WMH: {:.4f} at epoch {}".format(
-    #                         epoch + 1, metric_WMH, best_metric_WMH, best_metric_epoch_WMH
-    #                     )
-    #                 )
-    #                 writer.add_scalar("val_mean_dice_WMH", metric_WMH, epoch_len * (epoch+1))
+                    if metric_WMH > best_metric_WMH:
+                        best_metric_WMH = metric_WMH
+                        best_metric_epoch_WMH = epoch + 1
+                        if epoch>1:
+                            model_save_name = model_save_path + save_name + "_BEST_WMH.pth"
+                            torch.save(model.state_dict(), model_save_name)
+                            print("saved new best metric model")
+                    print(
+                        "current epoch: {} current mean dice WMH: {:.4f} best mean dice WMH: {:.4f} at epoch {}".format(
+                            epoch + 1, metric_WMH, best_metric_WMH, best_metric_epoch_WMH
+                        )
+                    )
+                    writer.add_scalar("val_mean_dice_WMH", metric_WMH, epoch_len * (epoch+1))
 
-    #             # scheduler.step(metric,epoch=epoch)
-    #             # writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * (epoch+1))
+                # scheduler.step(metric,epoch=epoch)
+                # writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * (epoch+1))
 
 
-    # # print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
-    # writer.close()
+    # print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
+    writer.close()

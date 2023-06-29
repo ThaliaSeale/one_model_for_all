@@ -87,7 +87,8 @@ class theory_UNET_progressive(theory_UNET):
 
         self.final_merge = Convolution(spatial_dims=3,in_channels=2,out_channels=out_channels,strides=1,kernel_size=3,dropout=0.2,conv_only=last_layer_conv_only)
     def forward(self, x: torch.Tensor, features: list) -> torch.Tensor:
-        
+    # def forward(self, input: tuple) -> torch.Tensor: # added the tuple thing after all because some of the helper functions from pytorch don't work well with multiple inputs.
+        # x, features = input 
         conv_out_1 = self.conv_1(x)
         
         merge_1 = self.features_in_conv_2(
