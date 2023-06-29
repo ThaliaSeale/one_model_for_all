@@ -19,7 +19,7 @@ from monai.networks.nets.unet import UNet
 from Nets.HEMISv2 import HEMISv2
 from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
-from Nets.theory_UNET import theory_UNET
+from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
 import utils
 
 # function that creates the dataloader for training
@@ -99,7 +99,18 @@ def map_channels(dataset_channels, total_modalities):
                     channel_map.append(index)
         return channel_map
 
+def get_features(name):
+    def hook(model, input, output):
+        features[name] = output.detach()
+    return hook
 
+def extract_features(layers):
+    out = pretrained_model(input_data)
+    pretrained_model_features = list()
+    for layer in layers:
+        pretrained_model_features.append(features[layer])
+    return pretrained_model_features
+                
 # main script
 if __name__ == "__main__":
     monai.config.print_config()
@@ -137,10 +148,8 @@ if __name__ == "__main__":
     lr = 1e-3
 
     pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-    pretrained_model = theory_UNET(in_channels = 6,
-                                   out_channels=1)
-    manual_channel_map = [0,1]
-    modalities_when_trained = ["FLAIR", "T1"]
+    manual_channel_map = [2,4] # not sure if I did this correctly
+    modalities_when_trained =  ['DP', 'DWI', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
 
     # settings if doing stepwise drop of learning rate
     drop_learning_rate = True
@@ -443,4 +452,566 @@ if __name__ == "__main__":
 
     # configure pretrained model
     print("LOADING PRETRAINED MODEL:", pretrained_model_path)
+    pretrained_model = theory_UNET(in_channels = len(modalities_when_trained),
+                                   out_channels=1).to(device)
     pretrained_model.load_state_dict(torch.load(pretrained_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
+    # registering forward hooks for the new model to get the activations
+    layers = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5', 'up_stage_1', 'up_stage_2', 'up_stage_3', 'up_stage_4']
+    for layer in layers:
+        getattr(pretrained_model,layer).register_forward_hook(get_features(layer))
+
+    # define progressive model
+    model = theory_UNET_progressive(in_channels = len(total_modalities),
+                                    out_channels= 1).to(device)
+
+    # defined loss function and optimiser
+    loss_function = DiceLoss(sigmoid=True)
+    optimizer = torch.optim.Adam(model.parameters())
+
+    # initialise best metric variables
+    best_metric_BRATS = -1
+    best_metric_ATLAS = -1
+    best_metric_MSSEG = -1
+    best_metric_ISLES = -1
+    best_metric_TBI = -1
+    best_metric_WMH = -1
+
+    best_metric_epoch_BRATS = -1
+    best_metric_epoch_ATLAS = -1
+    best_metric_epoch_MSSEG = -1
+    best_metric_epoch_ISLES = -1
+    best_metric_epoch_TBI = -1
+    best_metric_epoch_WMH = -1
+
+    metric_values = list()
+    
+    # create save names for tensorboard logging
+    if is_cluster:
+        log_save = "/users/sedm6251/tests/runs/" + save_name
+        model_save_path = "/users/sedm6251/tests/"
+    else:
+        log_save = "/home/thalia/one_model_for_all/results/" + save_name + "/log/"
+        model_save_path = "/home/thalia/one_model_for_all/results/" + save_name + "/model/" 
+        # check directory exists and if not create directory
+        if not os.path.exists(model_save_path):
+            os.makedirs(model_save_path)
+    writer = SummaryWriter(log_dir=log_save)
+
+    # start training cycle
+    for epoch in range(epochs):
+        print("-" * 10)
+        print(f"epoch {epoch + 1}/{epochs}")
+        model.train()
+        epoch_loss = 0
+        step = 0
+
+        # drop learning rate if desired
+        if drop_learning_rate and epoch == drop_learning_rate_epoch:
+            for g in optimizer.param_groups:
+                g['lr'] = drop_learning_rate_value
+
+        # placeholders
+        PREDS = []
+        FEATS = []
+        FEATS1 = []
+
+        features = {}
+
+        # each training loader is zipped together - there are different loaders for each dataset
+        for batch_data in zip(*train_loaders):
+ 
+            step += 1
+
+            outputs = []
+            labels = []
+        
+
+            # dataset-specific handling of training data - TODO merge all into one function - evolved organically and is messy
+            if "BRATS" in dataset:
+                loader_index = data_loader_map["BRATS"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+
+                    if randomly_drop:
+                        modalities_remaining, batch[img_index] = rand_set_channels_to_zero(channels_BRATS, batch[img_index])
+
+                        # this part is only relevant for BRATS when doing 2 channel segmentation
+                        if (0 not in modalities_remaining) and (3 not in modalities_remaining):
+                            # Edema cannot be seen so change segmentation to labels without edema
+                            seg_channel = 1
+                        else:
+                            seg_channel = 0
+                        if BRATS_two_channel_seg:
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
+                        else:
+                            label = batch[label_index].to(device)
+                    else:
+                        label = batch[label_index].to(device)
+                    
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,BRATS_channel_map,:,:,:] = batch[img_index]
+                    input_data = input_data.to(device)
+                else:
+                    if randomly_drop:
+                        modalities_remaining, batch[img_index] = remove_random_channels(channels_BRATS, batch[img_index])
+
+                        # this part is only relevant for BRATS when doing 2 channel segmentation
+                        if (0 not in modalities_remaining) and (3 not in modalities_remaining):
+                            # Edema cannot be seen so change segmentation to labels without edema
+                            seg_channel = 1
+                        else:
+                            seg_channel = 0
+                        if BRATS_two_channel_seg:
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
+                        else:
+                            label = batch[label_index].to(device)
+                    else:
+                        label = batch[label_index].to(device)
+                    
+                    if augment_modalities:
+                        if batch[img_index].shape[label_index] > 1:
+                            should_create_modality = bool(random.randint(0,1)) 
+                            if should_create_modality:
+                                batch[img_index] = augment(batch[img_index])
+
+                    input_data = batch[img_index].to(device)
+                
+                out = model(input_data)
+                outputs.append(out)
+                labels.append(label)
+                
+            if "ATLAS" in dataset:
+                loader_index = data_loader_map["ATLAS"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,ATLAS_channel_map,:,:,:] = batch[img_index]
+                    input_data = input_data.to(device)
+                else:
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
+                out = model(input_data)
+                outputs.append(out)
+                labels.append(label)
+
+            if "MSSEG" in dataset:
+                loader_index = data_loader_map["MSSEG"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+                    if randomly_drop:
+                        _, batch[img_index] = rand_set_channels_to_zero(channels_MSSEG, batch[img_index])
+
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,MSSEG_channel_map,:,:,:] = batch[img_index]
+                    input_data = input_data.to(device)
+                else:
+                    if randomly_drop:
+                        _, batch[img_index] = remove_random_channels(channels_MSSEG, batch[img_index])
+
+                    if augment_modalities:
+                        if batch[img_index].shape[1] > 1:
+                            should_create_modality = bool(random.randint(0,1))
+                            if should_create_modality:
+                                batch[img_index] = augment(batch[img_index])
+                        
+
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
+                out = model(input_data)
+                outputs.append(out)
+                labels.append(label)
+                # del input_data
+                # del label
+                # del out
+                # del batch
+                # del batch_data
+                # torch.cuda.empty_cache()
+
+            if "ISLES" in dataset:
+                loader_index = data_loader_map["ISLES"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+                    if randomly_drop:
+                        _, batch[img_index] = rand_set_channels_to_zero(channels_ISLES, batch[img_index])                    
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,ISLES_channel_map,:,:,:] = batch[img_index]
+                    input_data = input_data.to(device)
+                else:
+                    if randomly_drop:
+                        _, batch[img_index] = remove_random_channels(channels_ISLES, batch[img_index])
+                    if augment_modalities:
+                        if batch[img_index].shape[1] > 1:
+                            should_create_modality = bool(random.randint(0,1))
+                            if should_create_modality:
+                                batch[img_index] = augment(batch[img_index])
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
+                out = model(input_data)
+                outputs.append(out)
+                labels.append(label)
+
+            if "TBI" in dataset:
+                loader_index = data_loader_map["TBI"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+                    if randomly_drop:
+                        modalities_remaining, batch[img_index] = rand_set_channels_to_zero(channels_TBI, batch[img_index])
+                        # this part is only relevant for TBI when doing multi channel segmentation
+                        if (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 not in modalities_remaining):
+                            seg_channel = 2
+                        elif (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 in modalities_remaining):
+                            seg_channel = 1
+                        elif (3 not in modalities_remaining):
+                            seg_channel = 0
+                        else:
+                            seg_channel = 2
+
+                        if TBI_multi_channel_seg:
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
+                        else:
+                            label = batch[label_index].to(device)
+                    else:
+                        label = batch[label_index].to(device)              
+                    
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,TBI_channel_map,:,:,:] = batch[img_index]
+                    input_data = input_data.to(device)
+
+                else:
+                    if randomly_drop:
+                        modalities_remaining, batch[img_index] = remove_random_channels(channels_TBI, batch[img_index])
+                        # this part is only relevant for TBI when doing multi channel segmentation
+                        if (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 not in modalities_remaining):
+                            seg_channel = 2
+                        elif (0 not in modalities_remaining) and (2 not in modalities_remaining) and (3 in modalities_remaining):
+                            seg_channel = 1
+                        elif (3 not in modalities_remaining):
+                            seg_channel = 0
+                        else:
+                            seg_channel = 2
+
+                        if TBI_multi_channel_seg:
+                            label = batch[label_index][:,[seg_channel],:,:,:].to(device)
+                        else:
+                            label = batch[label_index].to(device)  
+                    else:
+                        label = batch[label_index].to(device)
+                    if augment_modalities:
+                        if batch[img_index].shape[1] > 1:
+                            should_create_modality = bool(random.randint(0,1))
+                            if should_create_modality:
+                                batch[img_index] = augment(batch[img_index])
+                    input_data = batch[img_index].to(device)
+                
+                # label = batch[label_index].to(device)
+                out = model(input_data)
+                # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
+                outputs.append(out)
+                labels.append(label)
+
+            if "WMH" in dataset:
+                loader_index = data_loader_map["WMH"]
+                batch = batch_data[loader_index]
+
+                if model_type == "UNET":
+                    if randomly_drop:
+                        _, batch[img_index] = rand_set_channels_to_zero(channels_WMH, batch[img_index])                    
+                    input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    input_data[:,WMH_channel_map,:,:,:] = batch[img_index]
+                    input_data = input_data.to(device)
+                else:
+                    if randomly_drop:
+                        _, batch[img_index] = remove_random_channels(channels_WMH, batch[img_index])
+                    if augment_modalities:
+                        if batch[img_index].shape[1] > 1:
+                            should_create_modality = bool(random.randint(0,1))
+                            if should_create_modality:
+                                batch[img_index] = augment(batch[img_index])
+                    input_data = batch[img_index].to(device)
+                label = batch[label_index].to(device)
+                
+                # extract features
+                pretrained_model_features = extract_features(layers)
+                # print(pretrained_model_features)
+                out = model(input_data,pretrained_model_features)
+                # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
+                # outputs.append(out)
+                # labels.append(label)
+
+
+
+    #         optimizer.zero_grad()
+
+    #         combined_outs = torch.cat(outputs, dim=0)
+    #         combined_labels = torch.cat(labels,dim=0)
+
+    #         loss = loss_function(combined_outs, combined_labels)
+    #         loss.backward()
+    #         optimizer.step()
+    #         epoch_loss += loss.item()
+    #         epoch_len = data_size  // train_batch_size
+    #         print(f"{step}/{epoch_len}, train_loss: {loss.item():.4f}")
+    #         writer.add_scalar("train_loss", loss.item(), epoch_len * epoch + step)
+    #         writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * epoch + step)
+    #         # cyclic_scheduler.step()
+            
+    #     epoch_loss /= step
+    #     print(f"epoch {epoch + 1} average loss: {epoch_loss:.4f}")
+
+    #     if (epoch+1) % 50 == 0:
+            
+    #         model_save_name = model_save_path + save_name + "_Epoch_" + str(epoch) + ".pth"
+    #         torch.save(model.state_dict(), model_save_name)
+    #         print("Saved Model")
+
+    #     if (epoch + 1) % val_interval == 0:
+    #         model.eval()
+    #         with torch.no_grad():
+    #             seg_channel = 0
+    #             val_images = None
+    #             val_labels = None
+    #             val_outputs = None
+
+    #             dice_metric.reset()
+
+    #             if "BRATS" in dataset:
+
+    #                 loader_index = data_loader_map["BRATS"]
+    #                 for val_data in val_loader_BRATS:
+    #                     if model_type == "UNET":
+    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+    #                         input_data[:,BRATS_channel_map,:,:,:] = val_data[0]
+    #                     else:
+    #                         input_data = val_data[0]
+    #                     input_data = input_data.to(device)
+
+    #                     if BRATS_two_channel_seg:
+    #                         label = val_data[1][:,[0],:,:,:].to(device)
+    #                     else:
+    #                         label = val_data[1].to(device)
+                        
+    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+    #                     sw_batch_size = 1
+    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+    #                     # compute metric for current iteration
+    #                     dice_metric(y_pred=val_outputs, y=label)
+    #                 metric_BRATS = dice_metric.aggregate().item()
+    #                 # reset the status for next validation round
+    #                 dice_metric.reset()
+
+    #                 if metric_BRATS > best_metric_BRATS:
+    #                     best_metric_BRATS = metric_BRATS
+    #                     best_metric_epoch_BRATS = epoch + 1
+    #                     if epoch>1:
+    #                         model_save_name = model_save_path + save_name + "_BEST_BRATS.pth"
+    #                         torch.save(model.state_dict(), model_save_name)
+    #                         print("saved new best metric model for BRATS")
+    #                 print(
+    #                     "current epoch: {} current mean dice BRATS: {:.4f} best mean dice BRATS: {:.4f} at epoch {}".format(
+    #                         epoch + 1, metric_BRATS, best_metric_BRATS, best_metric_epoch_BRATS
+    #                     )
+    #                 )
+    #                 writer.add_scalar("val_mean_dice_BRATS", metric_BRATS, epoch_len * (epoch+1))
+                    
+    #             if "ATLAS" in dataset:
+
+    #                 loader_index = data_loader_map["ATLAS"]
+    #                 for val_data in val_loader_ATLAS:
+    #                     # batch = val_data[loader_index]
+    #                     if model_type == "UNET":
+    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+    #                         input_data[:,ATLAS_channel_map,:,:,:] = val_data[0]
+    #                     else:
+    #                         input_data = val_data[0]
+    #                     input_data = input_data.to(device)
+    #                     label = val_data[1].to(device)
+                        
+    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+    #                     sw_batch_size = 1
+    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+    #                     # compute metric for current iteration
+    #                     dice_metric(y_pred=val_outputs, y=label)
+    #                 metric_ATLAS = dice_metric.aggregate().item()
+    #                 # reset the status for next validation round
+    #                 dice_metric.reset()
+
+    #                 if metric_ATLAS > best_metric_ATLAS:
+    #                     best_metric_ATLAS = metric_ATLAS
+    #                     best_metric_epoch_ATLAS = epoch + 1
+    #                     if epoch>1:
+    #                         model_save_name = model_save_path + save_name + "_BEST_ATLAS.pth"
+    #                         torch.save(model.state_dict(), model_save_name)
+    #                         print("saved new best metric model")
+    #                 print(
+    #                     "current epoch: {} current mean dice ATLAS: {:.4f} best mean dice ATLAS: {:.4f} at epoch {}".format(
+    #                         epoch + 1, metric_ATLAS, best_metric_ATLAS, best_metric_epoch_ATLAS
+    #                     )
+    #                 )
+    #                 writer.add_scalar("val_mean_dice_ATLAS", metric_ATLAS, epoch_len * (epoch+1))
+
+    #             if "MSSEG" in dataset:
+
+    #                 loader_index = data_loader_map["MSSEG"]
+    #                 for val_data in val_loader_MSSEG:
+    #                     # batch = val_data[loader_index]
+    #                     if model_type == "UNET":
+    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+    #                         input_data[:,MSSEG_channel_map,:,:,:] = val_data[0]
+    #                     else:
+    #                         input_data = val_data[0]
+    #                     input_data = input_data.to(device)
+    #                     label = val_data[1].to(device)
+                        
+    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+    #                     sw_batch_size = 1
+    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+    #                     # compute metric for current iteration
+    #                     dice_metric(y_pred=val_outputs, y=label)
+    #                 metric_MSSEG = dice_metric.aggregate().item()
+    #                 # reset the status for next validation round
+    #                 dice_metric.reset()
+
+    #                 if metric_MSSEG > best_metric_MSSEG:
+    #                     best_metric_MSSEG = metric_MSSEG
+    #                     best_metric_epoch_MSSEG = epoch + 1
+    #                     if epoch>1:
+    #                         model_save_name = model_save_path + save_name + "_BEST_MSSEG.pth"
+    #                         torch.save(model.state_dict(), model_save_name)
+    #                         print("saved new best metric model")
+    #                 print(
+    #                     "current epoch: {} current mean dice MSSEG: {:.4f} best mean dice MSSEG: {:.4f} at epoch {}".format(
+    #                         epoch + 1, metric_MSSEG, best_metric_MSSEG, best_metric_epoch_MSSEG
+    #                     )
+    #                 )
+    #                 writer.add_scalar("val_mean_dice_MSSEG", metric_MSSEG, epoch_len * (epoch+1))
+
+    #             if "ISLES" in dataset:
+
+    #                 loader_index = data_loader_map["ISLES"]
+    #                 for val_data in val_loader_ISLES:
+    #                     # batch = val_data[loader_index]
+    #                     if model_type == "UNET":
+    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+    #                         input_data[:,ISLES_channel_map,:,:,:] = val_data[0]
+    #                     else:
+    #                         input_data = val_data[0]
+    #                     input_data = input_data.to(device)
+    #                     label = val_data[1].to(device)
+                        
+    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+    #                     sw_batch_size = 1
+    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+    #                     # compute metric for current iteration
+    #                     dice_metric(y_pred=val_outputs, y=label)
+    #                 metric_ISLES = dice_metric.aggregate().item()
+    #                 # reset the status for next validation round
+    #                 dice_metric.reset()
+
+    #                 if metric_ISLES > best_metric_ISLES:
+    #                     best_metric_ISLES = metric_ISLES
+    #                     best_metric_epoch_ISLES = epoch + 1
+    #                     if epoch>1:
+    #                         model_save_name = model_save_path + save_name + "_BEST_ISLES.pth"
+    #                         torch.save(model.state_dict(), model_save_name)
+    #                         print("saved new best metric model")
+    #                 print(
+    #                     "current epoch: {} current mean dice ISLES: {:.4f} best mean dice ISLES: {:.4f} at epoch {}".format(
+    #                         epoch + 1, metric_ISLES, best_metric_ISLES, best_metric_epoch_ISLES
+    #                     )
+    #                 )
+    #                 writer.add_scalar("val_mean_dice_ISLES", metric_ISLES, epoch_len * (epoch+1))
+
+    #             if "TBI" in dataset:
+
+    #                 loader_index = data_loader_map["TBI"]
+    #                 for val_data in val_loader_TBI:
+    #                     # batch = val_data[loader_index]
+    #                     if model_type == "UNET":
+    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+    #                         input_data[:,TBI_channel_map,:,:,:] = val_data[0]
+    #                     else:
+    #                         input_data = val_data[0]
+    #                     input_data = input_data.to(device)
+
+    #                     if TBI_multi_channel_seg:
+    #                         label = val_data[1][:,[2],:,:,:].to(device)
+    #                     else:
+    #                         label = val_data[1].to(device)
+    #                     # label = val_data[1].to(device)
+                        
+    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+    #                     sw_batch_size = 1
+    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+    #                     # compute metric for current iteration
+    #                     dice_metric(y_pred=val_outputs, y=label)
+    #                 metric_TBI = dice_metric.aggregate().item()
+    #                 # reset the status for next validation round
+    #                 dice_metric.reset()
+
+    #                 if metric_TBI > best_metric_TBI:
+    #                     best_metric_TBI = metric_TBI
+    #                     best_metric_epoch_TBI = epoch + 1
+    #                     if epoch>1:
+    #                         model_save_name = model_save_path + save_name + "_BEST_TBI.pth"
+    #                         torch.save(model.state_dict(), model_save_name)
+    #                         print("saved new best metric model")
+    #                 print(
+    #                     "current epoch: {} current mean dice TBI: {:.4f} best mean dice TBI: {:.4f} at epoch {}".format(
+    #                         epoch + 1, metric_TBI, best_metric_TBI, best_metric_epoch_TBI
+    #                     )
+    #                 )
+    #                 writer.add_scalar("val_mean_dice_TBI", metric_TBI, epoch_len * (epoch+1))
+
+    #             if "WMH" in dataset:
+
+    #                 loader_index = data_loader_map["WMH"]
+    #                 for val_data in val_loader_WMH:
+    #                     # batch = val_data[loader_index]
+    #                     if model_type == "UNET":
+    #                         input_data = torch.from_numpy(np.zeros((1,len(total_modalities),val_data[0].shape[2],val_data[0].shape[3],val_data[0].shape[4]),dtype=np.float32))
+    #                         input_data[:,WMH_channel_map,:,:,:] = val_data[0]
+    #                     else:
+    #                         input_data = val_data[0]
+    #                     input_data = input_data.to(device)
+    #                     label = val_data[1].to(device)
+                        
+    #                     roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
+    #                     sw_batch_size = 1
+    #                     val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
+    #                     val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
+    #                     # compute metric for current iteration
+    #                     dice_metric(y_pred=val_outputs, y=label)
+    #                 metric_WMH = dice_metric.aggregate().item()
+    #                 # reset the status for next validation round
+    #                 dice_metric.reset()
+
+    #                 if metric_WMH > best_metric_WMH:
+    #                     best_metric_WMH = metric_WMH
+    #                     best_metric_epoch_WMH = epoch + 1
+    #                     if epoch>1:
+    #                         model_save_name = model_save_path + save_name + "_BEST_WMH.pth"
+    #                         torch.save(model.state_dict(), model_save_name)
+    #                         print("saved new best metric model")
+    #                 print(
+    #                     "current epoch: {} current mean dice WMH: {:.4f} best mean dice WMH: {:.4f} at epoch {}".format(
+    #                         epoch + 1, metric_WMH, best_metric_WMH, best_metric_epoch_WMH
+    #                     )
+    #                 )
+    #                 writer.add_scalar("val_mean_dice_WMH", metric_WMH, epoch_len * (epoch+1))
+
+    #             # scheduler.step(metric,epoch=epoch)
+    #             # writer.add_scalar("learning_rate", (optimizer.param_groups)[0]['lr'], epoch_len * (epoch+1))
+
+
+    # # print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
+    # writer.close()

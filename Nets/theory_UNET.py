@@ -89,13 +89,11 @@ class theory_UNET_progressive(theory_UNET):
     def forward(self, x: torch.Tensor, features: list) -> torch.Tensor:
         
         conv_out_1 = self.conv_1(x)
-        print(conv_out_1.shape)
         
         merge_1 = self.features_in_conv_2(
             torch.cat((conv_out_1,features[0]),dim=1)
         )        
         conv_out_2 = self.conv_2(merge_1)
-        print(conv_out_2.shape)
 
         merge_2 = self.features_in_conv_3(
             torch.cat((conv_out_2,features[1]),dim=1)
