@@ -1,7 +1,7 @@
 import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader, PatchIter, GridPatchDataset
-# from monai.inferers import sliding_window_inference
-from sliding_window_progressive import sliding_window_inference_progressive
+from monai.inferers import sliding_window_inference
+# from sliding_window_progressive import sliding_window_inference_progressive
 from monai.metrics import DiceMetric
 from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop, RandCropByPosNegLabel
 from monai.utils import set_determinism
@@ -21,6 +21,7 @@ from Nets.HEMISv2 import HEMISv2
 from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
 from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
+from Nets.WMH_progressive_unet import WMH_progressive_UNET
 import utils
 
 # function that creates the dataloader for training
@@ -149,8 +150,6 @@ if __name__ == "__main__":
     val_interval = 2
     lr = 1e-3
 
-    pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-    print("LOADING PRETRAINED MODEL:", pretrained_model_path)
     manual_channel_map = [2,4] # not sure if I did this correctly
     modalities_when_trained =  ['DP', 'DWI', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
 
@@ -453,20 +452,9 @@ if __name__ == "__main__":
     print("in_channels=",len(total_modalities))
     print("batch size = ",train_batch_size)
 
-    # configure pretrained model
-    print("LOADING PRETRAINED MODEL:", pretrained_model_path)
-    pretrained_model = theory_UNET(in_channels = len(modalities_when_trained),
-                                   out_channels=1).to(device)
-    pretrained_model.load_state_dict(torch.load(pretrained_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
-    # registering forward hooks for the new model to get the activations
-    layers = ['conv_1', 'conv_2', 'conv_3', 'conv_4', 'conv_5', 'up_stage_1', 'up_stage_2', 'up_stage_3', 'up_stage_4']
-    for layer in layers:
-        getattr(pretrained_model,layer).register_forward_hook(get_features(layer))
-
     # define progressive model
-    model = theory_UNET_progressive(in_channels = len(total_modalities),
+    model = WMH_progressive_UNET(in_channels = len(total_modalities),
                                     out_channels= 1).to(device)
-
     # defined loss function and optimiser
     loss_function = DiceLoss(sigmoid=True)
     optimizer = torch.optim.Adam(model.parameters())
@@ -739,9 +727,9 @@ if __name__ == "__main__":
                 label = batch[label_index].to(device)
                 
                 # extract features
-                pretrained_model_features = extract_features(input_data,layers)
+                # pretrained_model_features = extract_features(input_data,layers)
                 # print(pretrained_model_features)
-                out = model(input_data,pretrained_model_features)
+                out = model(input_data)
                 # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
                 outputs.append(out)
                 labels.append(label)
@@ -991,7 +979,7 @@ if __name__ == "__main__":
                         roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
                         sw_batch_size = 1
                         # val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
-                        val_outputs = sliding_window_inference_progressive(input_data, roi_size, sw_batch_size, pretrained_model, layers, model)
+                        val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
                         val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
                         # compute metric for current iteration
                         dice_metric(y_pred=val_outputs, y=label)
