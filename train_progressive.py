@@ -22,11 +22,12 @@ from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
 from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
 from Nets.WMH_progressive_unet import WMH_progressive_UNET
+from Nets.ISLES_progressive_unet import ISLES_progressive_UNET
 import utils
 
 # function that creates the dataloader for training
 # def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = False, limited_data_size = 10):
-def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = True, limited_data_size = 20):
+def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = False, limited_data_size = 10):
 
     div = total_train_data_size//current_train_data_size
     rem = total_train_data_size%current_train_data_size
@@ -150,9 +151,9 @@ if __name__ == "__main__":
     val_interval = 2
     lr = 1e-3
 
-    manual_channel_map = [2,4] # not sure if I did this correctly
-    modalities_when_trained =  ['DP', 'DWI', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
-
+    manual_channel_map = [1,3,5,6] # not sure if I did this correctly
+    # modalities_when_trained =  ['DP', 'DWI', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2','DWI']
     # settings if doing stepwise drop of learning rate
     drop_learning_rate = True
     drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
@@ -168,6 +169,9 @@ if __name__ == "__main__":
     augment_modalities = False # if True, randomly add a non-linear combination of modalities to the training set for augmentation
     cropped_input_size = [128,128,128] 
     crop_on_label = False # True if random cropping to size should be done centred on areas of lesion
+
+    limited_data = True
+    limited_data_size = 20
 
     
     #########################################################
@@ -222,12 +226,12 @@ if __name__ == "__main__":
     total_modalities = sorted(list(total_modalities))
 
     # generate the mappings of each dataset to the network input channels
-    BRATS_channel_map = map_channels(channels_BRATS, total_modalities)
-    ATLAS_channel_map = map_channels(channels_ATLAS, total_modalities)
-    MSSEG_channel_map = map_channels(channels_MSSEG, total_modalities)
-    ISLES_channel_map = map_channels(channels_ISLES, total_modalities)
-    TBI_channel_map = map_channels(channels_TBI, total_modalities)
-    WMH_channel_map = map_channels(channels_WMH, total_modalities)
+    # BRATS_channel_map = map_channels(channels_BRATS, total_modalities)
+    # ATLAS_channel_map = map_channels(channels_ATLAS, total_modalities)
+    # MSSEG_channel_map = map_channels(channels_MSSEG, total_modalities)
+    # ISLES_channel_map = map_channels(channels_ISLES, total_modalities)
+    # TBI_channel_map = map_channels(channels_TBI, total_modalities)
+    # WMH_channel_map = map_channels(channels_WMH, total_modalities)
 
     # channel mappings 
     print("MANUALLY SETTING CHANNEL MAP")
@@ -348,7 +352,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_ISLES, val_loader_ISLES = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
         else:
-            train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
+            train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
 
         data_loader_map["ISLES"] = len(train_loaders)
         train_loaders.append(train_loader_ISLES)
@@ -436,7 +440,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_WMH, val_loader_WMH = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
         else:
-            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
+            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
 
         data_loader_map["WMH"] = len(train_loaders)
         train_loaders.append(train_loader_WMH)
@@ -453,8 +457,12 @@ if __name__ == "__main__":
     print("batch size = ",train_batch_size)
 
     # define progressive model
-    model = WMH_progressive_UNET(in_channels = len(total_modalities),
-                                    out_channels= 1).to(device)
+    if "WMH" in dataset:
+        model = WMH_progressive_UNET(in_channels = len(total_modalities),
+                                        out_channels= 1).to(device)
+    elif "ISLES" in dataset:
+        model = ISLES_progressive_UNET(in_channels = len(total_modalities),
+                                        out_channels= 1).to(device)
     # defined loss function and optimiser
     loss_function = DiceLoss(sigmoid=True)
     optimizer = torch.optim.Adam(model.parameters())
@@ -629,6 +637,9 @@ if __name__ == "__main__":
                     if randomly_drop:
                         _, batch[img_index] = rand_set_channels_to_zero(channels_ISLES, batch[img_index])                    
                     input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    # print("input_data.shape",input_data.shape)
+                    # print("input_data[:,ISLES_channel_map,:,:,:]",input_data[:,ISLES_channel_map,:,:,:].shape)
+                    # print("batch[img_index].shape",batch[img_index].shape)
                     input_data[:,ISLES_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
                 else:
