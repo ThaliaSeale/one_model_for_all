@@ -14,15 +14,15 @@ def extract_features(input_data,layers):
     return pretrained_model_features
 
 # cuda_id = "cuda:0" # this needs to be changed when running the model
-cuda_id = "cuda:1" # this needs to be changed when running the model
+cuda_id = "cuda:0" # this needs to be changed when running the model
 device = torch.device(cuda_id)
 torch.cuda.set_device(cuda_id)
     
 # pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
+pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS_MSSEG_TBI_WMH/UNET/UNET_ATLAS_MSSEG_TBI_WMH_BEST_TBI.pth"
 print("LOADING PRETRAINED MODEL:", pretrained_model_path)
 
-manual_channel_map = [1,3,5,6] # not sure if I did this correctly
+manual_channel_map = [1,3,4,5] # not sure if I did this correctly
 modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
 total_modalities = modalities_when_trained
 
@@ -39,7 +39,7 @@ for layer in layers:
     getattr(pretrained_model,layer).register_forward_hook(get_features(layer))
 features = {} # placeholder for the features
 
-class ISLES_progressive_UNET(theory_UNET_progressive):
+class BRATS_progressive_UNET(theory_UNET_progressive):
 
     def __init__(self,
             in_channels: int,

@@ -23,6 +23,7 @@ from Nets.multi_scale_fusion_net import MSFN
 from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
 from Nets.WMH_progressive_unet import WMH_progressive_UNET
 from Nets.ISLES_progressive_unet import ISLES_progressive_UNET
+from Nets.BRATS_progressive_unet import BRATS_progressive_UNET
 import utils
 
 # function that creates the dataloader for training
@@ -117,10 +118,6 @@ def extract_features(input_data,layers):
                 
 # main script
 if __name__ == "__main__":
-    monai.config.print_config()
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    set_determinism(seed=1)
-    print("determinism seed = 1")
 
     # input arguments
     device_id = int(sys.argv[1])
@@ -128,6 +125,19 @@ if __name__ == "__main__":
     save_name = str(sys.argv[3])
     dataset = str(sys.argv[4])
     randomly_drop = bool(int(sys.argv[5]))
+    pretrain = bool(int(sys.argv[6]))
+    limited_data = bool(int(sys.argv[7]))
+
+    monai.config.print_config()
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    set_determinism(seed=1)
+    print("determinism seed = 1")
+
+    
+    if pretrain:
+        print("PRETRAINING MODEL")
+    if limited_data:
+        print("limited data")
 
     #########################################################
     # *********  ASSUMPTIONS ABOUT THE DATA  **********
@@ -151,13 +161,23 @@ if __name__ == "__main__":
     val_interval = 2
     lr = 1e-3
 
-    manual_channel_map = [1,3,5,6] # not sure if I did this correctly
-    # modalities_when_trained =  ['DP', 'DWI', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
-    modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2','DWI']
+    if "WMH" in dataset:
+        # channel map for WMH
+        manual_channel_map = [1,3]
+        # modalities when trained for WMH
+        modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    elif "ISLES" in dataset:
+        # channel map for ISLES
+        manual_channel_map = [1,3,5,6] # not sure if I did this correctly
+        # modalities when trained for ISLES 
+        modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2','DWI']
+    elif "BRATS" in dataset:
+        manual_channel_map = [1,3,4,5]
+        modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
     # settings if doing stepwise drop of learning rate
     drop_learning_rate = True
     drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
-    drop_learning_rate_value = 1e-4 # learning rate to drop to
+    drop_learning_rate_value = 1e-5 # learning rate to drop to
 
     legacy_unet = False
 
@@ -170,8 +190,14 @@ if __name__ == "__main__":
     cropped_input_size = [128,128,128] 
     crop_on_label = False # True if random cropping to size should be done centred on areas of lesion
 
-    limited_data = True
-    limited_data_size = 20
+    # limited_data = True
+    # limited_data = False
+    if "WMH" in dataset:
+        limited_data_size = 20
+    elif "ISLES" in dataset:
+        limited_data_size = 10
+    elif "BRATS" in dataset:
+        liimited_data_size = 20
 
     
     #########################################################
@@ -226,23 +252,24 @@ if __name__ == "__main__":
     total_modalities = sorted(list(total_modalities))
 
     # generate the mappings of each dataset to the network input channels
-    # BRATS_channel_map = map_channels(channels_BRATS, total_modalities)
-    # ATLAS_channel_map = map_channels(channels_ATLAS, total_modalities)
-    # MSSEG_channel_map = map_channels(channels_MSSEG, total_modalities)
-    # ISLES_channel_map = map_channels(channels_ISLES, total_modalities)
-    # TBI_channel_map = map_channels(channels_TBI, total_modalities)
-    # WMH_channel_map = map_channels(channels_WMH, total_modalities)
+    BRATS_channel_map = map_channels(channels_BRATS, total_modalities)
+    ATLAS_channel_map = map_channels(channels_ATLAS, total_modalities)
+    MSSEG_channel_map = map_channels(channels_MSSEG, total_modalities)
+    ISLES_channel_map = map_channels(channels_ISLES, total_modalities)
+    TBI_channel_map = map_channels(channels_TBI, total_modalities)
+    WMH_channel_map = map_channels(channels_WMH, total_modalities)
 
     # channel mappings 
-    print("MANUALLY SETTING CHANNEL MAP")
-    BRATS_channel_map = manual_channel_map
-    ATLAS_channel_map = manual_channel_map
-    MSSEG_channel_map = manual_channel_map
-    ISLES_channel_map = manual_channel_map
-    TBI_channel_map = manual_channel_map
-    WMH_channel_map = manual_channel_map
+    if not(pretrain):
+        print("MANUALLY SETTING CHANNEL MAP")
+        BRATS_channel_map = manual_channel_map
+        ATLAS_channel_map = manual_channel_map
+        MSSEG_channel_map = manual_channel_map
+        ISLES_channel_map = manual_channel_map
+        TBI_channel_map = manual_channel_map
+        WMH_channel_map = manual_channel_map
 
-    total_modalities = modalities_when_trained
+        total_modalities = modalities_when_trained
 
     
     print("Total modalities: ", total_modalities)
@@ -458,11 +485,19 @@ if __name__ == "__main__":
 
     # define progressive model
     if "WMH" in dataset:
-        model = WMH_progressive_UNET(in_channels = len(total_modalities),
+        model = WMH_progressive_UNET(in_channels = 2,
                                         out_channels= 1).to(device)
     elif "ISLES" in dataset:
-        model = ISLES_progressive_UNET(in_channels = len(total_modalities),
+        if pretrain:
+            model = theory_UNET(in_channels = 4,
+                                out_channels=1).to(device)
+        else:
+            model = ISLES_progressive_UNET(in_channels = 4,
                                         out_channels= 1).to(device)
+            # model.load_state_dict(torch.load("results/ISLES_from_scratch_few/model/ISLES_from_scratch_few_BEST_ISLES.pth"), strict=False)
+    elif "BRATS" in dataset:
+        model = BRATS_progressive_UNET(in_channels = 4,
+                                       out_channels= 1).to(device)
     # defined loss function and optimiser
     loss_function = DiceLoss(sigmoid=True)
     optimizer = torch.optim.Adam(model.parameters())
