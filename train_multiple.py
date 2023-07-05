@@ -137,8 +137,8 @@ if __name__ == "__main__":
     lr = 1e-3
 
     # settings for refinement training from a pre-trained model
-    load_pre_trained_model = False
-    load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth"
+    load_pre_trained_model = True 
+    load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
     manual_channel_map = [1,3,5,2] # the slots the modalities of the new dataset should be placed in
     modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] # the modalities the model was trained on (alphabetical order necessary)
 

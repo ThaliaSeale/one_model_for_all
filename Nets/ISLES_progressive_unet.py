@@ -1,4 +1,4 @@
-from Nets.theory_UNET_progressive import theory_UNET, theory_UNET_progressive
+from Nets.theory_UNET_progressive import theory_UNET, theory_UNET_progressive, theory_UNET_progressive_linear_combination
 
 import torch
 def get_features(name):
@@ -13,8 +13,8 @@ def extract_features(input_data,layers):
         pretrained_model_features.append(features[layer])
     return pretrained_model_features
 
-# cuda_id = "cuda:0" # this needs to be changed when running the model
 cuda_id = "cuda:1" # this needs to be changed when running the model
+# cuda_id = "cuda:1" # this needs to be changed when running the model
 device = torch.device(cuda_id)
 torch.cuda.set_device(cuda_id)
     
@@ -40,6 +40,24 @@ for layer in layers:
 features = {} # placeholder for the features
 
 class ISLES_progressive_UNET(theory_UNET_progressive):
+
+    def __init__(self,
+            in_channels: int,
+            out_channels:int = 1,
+            last_layer_conv_only:bool = True
+        ) -> None:
+        super().__init__(in_channels,out_channels,last_layer_conv_only)
+
+        self.pretrained_model = pretrained_model
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+
+        pretrained_input = x[:,0:6,:,:,:] # first 6 modalities were seen, there rest weren't
+        pretrained_features = extract_features(pretrained_input,layers) 
+        x = x[:,manual_channel_map,:,:,:] # extracting only non-empty modalities
+        return super().forward(x,pretrained_features)
+
+class ISLES_progresive_UNET_linear_combination(theory_UNET_progressive_linear_combination):
 
     def __init__(self,
             in_channels: int,

@@ -22,7 +22,7 @@ from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
 from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
 from Nets.WMH_progressive_unet import WMH_progressive_UNET
-from Nets.ISLES_progressive_unet import ISLES_progressive_UNET
+from Nets.ISLES_progressive_unet import ISLES_progressive_UNET, ISLES_progresive_UNET_linear_combination
 from Nets.BRATS_progressive_unet import BRATS_progressive_UNET
 import utils
 
@@ -175,7 +175,9 @@ if __name__ == "__main__":
         manual_channel_map = [1,3,4,5]
         modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
     # settings if doing stepwise drop of learning rate
-    drop_learning_rate = True
+    # drop_learning_rate = True
+    drop_learning_rate = False
+
     drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
     drop_learning_rate_value = 1e-5 # learning rate to drop to
 
@@ -495,6 +497,8 @@ if __name__ == "__main__":
             model = ISLES_progressive_UNET(in_channels = 4,
                                         out_channels= 1).to(device)
             # model.load_state_dict(torch.load("results/ISLES_from_scratch_few/model/ISLES_from_scratch_few_BEST_ISLES.pth"), strict=False)
+            # model = ISLES_progresive_UNET_linear_combination(in_channels = 4,
+                                                            #   out_channels= 1).to(device)
     elif "BRATS" in dataset:
         model = BRATS_progressive_UNET(in_channels = 4,
                                        out_channels= 1).to(device)
