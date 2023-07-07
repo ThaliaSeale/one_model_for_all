@@ -256,7 +256,7 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_ATLAS_MSSEG_WMH_BEST_WMH.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
 
     # train brats atlas tbi wmh
-    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_ATLAS.pth", "UNet", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2], "camcan":[2,4]}),
+    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_ATLAS.pth", "UNet", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2], "camcan":[2,4]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_BRATS.pth", "UNet", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_TBI.pth", "UNet", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_WMH.pth", "UNet", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
@@ -267,7 +267,7 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_MSSEG_TBI_WMH_BEST_MSSEG.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_MSSEG_TBI_WMH_BEST_TBI.pth", "MSFN", 5, {"BRATS":[0,2,3,4], "ATLAS":[2], "MSSEG":[0,2,3,4,1], "ISLES2015":[0,2,4,3], "TBI":[0,2,4,1], "WMH":[0,2]}),
-    Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,0], "TBI":[1,3,5,2], "WMH":[1,3],"camcan":[3,5]}),
+    # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,0], "TBI":[1,3,5,2], "WMH":[1,3],"camcan":[3,5]}),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_MSSEG.pth", "UNet", 6, {"BRATS":[1,3,4,5], "ATLAS":[3], "MSSEG":[1,3,4,5,0], "ISLES2015":[1,3,5,0], "TBI":[1,3,5,2], "WMH":[1,3]}),
 
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/MSFN_ATLAS_20_Epoch_499.pth", "MSFN", 0, { "ATLAS" :[0]} ),
@@ -310,6 +310,8 @@ if __name__=="__main__":
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_ATLAS_MSSEG_TBI_BEST_TBI.pth", "MSFN", 0, { "WMH" :[0, 1]} ),
     # Net("/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/MSFN_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth", "MSFN", 0, { "WMH" :[0, 1]} ),
 
+    # THALIA'S NETS
+    # Net("/home/thalia/one_model_for_all/results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth", "UNet", 7, { "TBI" :[1,2,4,3]})
 
     ]
 
@@ -329,8 +331,8 @@ if __name__=="__main__":
     #########################################################
     # *********  CONFIGURABLE PARAMETERS  **********
     #########################################################
-    save_segs=False # True to save the segmentation outputs 
-    save_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TEST_ATLAS/UNET/"
+    save_segs=False# True to save the segmentation outputs 
+    save_path = "/home/thalia/one_model_for_all/tests/"
     detect_blobs = False # whether to conduct connected component analysis
     #########################################################
 
@@ -385,6 +387,7 @@ if __name__=="__main__":
                 modalities = [[int(i) for i in modalities_to_test]]
 
             for combination in modalities:
+                print("Combination: " + str(combination))
                 dsc_scores, seg_pix_vols, gt_pix_vols, detected, undetected, det_seg_sizes, undet_seg_sizes = test.test(model,
                     dataloader,
                     dataset,

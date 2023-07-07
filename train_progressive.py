@@ -1,6 +1,7 @@
 import monai
 from monai.data import ImageDataset, create_test_image_3d, decollate_batch, DataLoader, PatchIter, GridPatchDataset
 from monai.inferers import sliding_window_inference
+# from sliding_window_progressive import sliding_window_inference_progressive
 from monai.metrics import DiceMetric
 from monai.transforms import Activations, EnsureChannelFirst, AsDiscrete, Compose, RandRotate90, RandSpatialCrop, ScaleIntensity, CenterSpatialCrop, RandCropByPosNegLabel
 from monai.utils import set_determinism
@@ -19,10 +20,17 @@ from monai.networks.nets.unet import UNet
 from Nets.HEMISv2 import HEMISv2
 from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
-from Nets.theory_UNET import theory_UNET
+from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
+from Nets.WMH_progressive_unet import WMH_progressive_UNET
+from Nets.ISLES_progressive_unet import ISLES_progressive_UNET, ISLES_progresive_UNET_linear_combination
+from Nets.BRATS_progressive_unet import BRATS_progressive_UNET
+from Nets.MSSEG_progressive_unet import MSSEG_progressive_UNET
+from Nets.ATLAS_progressive_unet import ATLAS_progressive_UNET
+from Nets.TBI_progressive_unet import TBI_progressive_UNET
 import utils
 
 # function that creates the dataloader for training
+# def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = False, limited_data_size = 10):
 def create_dataloader(val_size: int, images, segs, workers, train_batch_size: int, total_train_data_size: int, current_train_data_size: int, cropped_input_size:list, limited_data = False, limited_data_size = 10):
 
     div = total_train_data_size//current_train_data_size
@@ -37,8 +45,8 @@ def create_dataloader(val_size: int, images, segs, workers, train_batch_size: in
     # /////////// TODO ONLY UNCOMMENT FOR LIMITED DATA /////////////////
     if limited_data:
         print("TRAINING ONLY FIRST " + str(limited_data_size) + " IMAGES!!!!!")
-        train_images = images[:limited_data_train_size]
-        train_segs = segs[:limited_data_train_size]
+        train_images = images[:limited_data_size]
+        train_segs = segs[:limited_data_size]
 
     # image augmentation through spatial cropping to size and by randomly rotating
     train_imtrans = Compose(
@@ -99,13 +107,20 @@ def map_channels(dataset_channels, total_modalities):
                     channel_map.append(index)
         return channel_map
 
+def get_features(name):
+    def hook(model, input, output):
+        features[name] = output.detach()
+    return hook
 
+def extract_features(input_data,layers):
+    out = pretrained_model(input_data)
+    pretrained_model_features = list()
+    for layer in layers:
+        pretrained_model_features.append(features[layer])
+    return pretrained_model_features
+                
 # main script
 if __name__ == "__main__":
-    monai.config.print_config()
-    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    set_determinism(seed=1)
-    print("determinism seed = 1")
 
     # input arguments
     device_id = int(sys.argv[1])
@@ -113,6 +128,19 @@ if __name__ == "__main__":
     save_name = str(sys.argv[3])
     dataset = str(sys.argv[4])
     randomly_drop = bool(int(sys.argv[5]))
+    pretrain = bool(int(sys.argv[6]))
+    limited_data = bool(int(sys.argv[7]))
+
+    monai.config.print_config()
+    logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+    set_determinism(seed=1)
+    print("determinism seed = 1")
+
+    
+    if pretrain:
+        print("PRETRAINING MODEL")
+    if limited_data:
+        print("limited data")
 
     #########################################################
     # *********  ASSUMPTIONS ABOUT THE DATA  **********
@@ -136,22 +164,36 @@ if __name__ == "__main__":
     val_interval = 2
     lr = 1e-3
 
-    # settings for refinement training from a pre-trained model
-    load_pre_trained_model = True 
-    load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
-    manual_channel_map = [1,3,5,2] # the slots the modalities of the new dataset should be placed in
-    modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] # the modalities the model was trained on (alphabetical order necessary)
-
-    # settings if training on limited data
-    train_limited_data = False
-    limited_data_train_size = 10 #number of training images to use if training on limited data
+    if "WMH" in dataset:
+        # channel map for WMH
+        manual_channel_map = [1,3]
+        # modalities when trained for WMH
+        modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    elif "ISLES" in dataset:
+        # channel map for ISLES
+        manual_channel_map = [1,3,5,6] # not sure if I did this correctly
+        # modalities when trained for ISLES 
+        modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2','DWI']
+    elif "BRATS" in dataset:
+        manual_channel_map = [1,3,4,5]
+        modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    elif "MSSEG" in dataset:
+        manual_channel_map = [0, 2, 3, 4, 1]
+        modalities_when_trained = ['FLAIR', 'SWI', 'T1', 'T1c', 'T2'] 
+    elif "ATLAS" in dataset:
+        manual_channel_map = [3]
+        modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] 
+    elif "TBI" in dataset:
+        manual_channel_map = [1,2,4,3]
+        modalities_when_trained = ['DP','FLAIR', 'T1', 'T1c', 'T2']
 
     # settings if doing stepwise drop of learning rate
-    drop_learning_rate = False 
-    drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
-    drop_learning_rate_value = 1e-4 # learning rate to drop to
+    # drop_learning_rate = True
+    drop_learning_rate = False
 
-    # set true if using the older unet (net in file UNetv2.py)
+    drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
+    drop_learning_rate_value = 1e-5 # learning rate to drop to
+
     legacy_unet = False
 
     # parameters that are unlikely to be needed
@@ -163,10 +205,25 @@ if __name__ == "__main__":
     cropped_input_size = [128,128,128] 
     crop_on_label = False # True if random cropping to size should be done centred on areas of lesion
 
+    # limited_data = True
+    # limited_data = False
+    if "WMH" in dataset:
+        limited_data_size = 20
+    elif "ISLES" in dataset:
+        limited_data_size = 10
+    elif "BRATS" in dataset:
+        limited_data_size = 20
+    elif "MSSEG" in dataset:
+        limited_data_size = 20
+    elif "ATLAS" in dataset:
+        limited_data_size = 20
+    elif "TBI" in dataset:
+        llimited_data_size = 50
+    
     #########################################################
     # *********  END OF CONFIGURABLE PARAMETERS  **********
     #########################################################
-
+    
     print("lr: ",lr)
     print("Workers: ", workers)
     print("Batch size: ", train_batch_size)
@@ -222,8 +279,8 @@ if __name__ == "__main__":
     TBI_channel_map = map_channels(channels_TBI, total_modalities)
     WMH_channel_map = map_channels(channels_WMH, total_modalities)
 
-    # manually set channel mapping if using a pre-trained model for refinement
-    if load_pre_trained_model:
+    # channel mappings 
+    if not(pretrain):
         print("MANUALLY SETTING CHANNEL MAP")
         BRATS_channel_map = manual_channel_map
         ATLAS_channel_map = manual_channel_map
@@ -274,7 +331,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_BRATS, val_loader_BRATS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
         else:   
-            train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
+            train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
         
         data_loader_map["BRATS"] = len(train_loaders)
         train_loaders.append(train_loader_BRATS)
@@ -296,7 +353,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_ATLAS, val_loader_ATLAS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
         else:
-            train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
+            train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
 
         data_loader_map["ATLAS"] = len(train_loaders)
         train_loaders.append(train_loader_ATLAS)
@@ -342,7 +399,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_ISLES, val_loader_ISLES = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
         else:
-            train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
+            train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
 
         data_loader_map["ISLES"] = len(train_loaders)
         train_loaders.append(train_loader_ISLES)
@@ -430,19 +487,11 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_WMH, val_loader_WMH = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
         else:
-            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
+            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
 
         data_loader_map["WMH"] = len(train_loaders)
         train_loaders.append(train_loader_WMH)
         val_loaders.append(val_loader_WMH)
-
-
-    # ////////////////// ONLY FOR LIMITED DATA  ////////////
-    if train_limited_data:
-        data_size = limited_data_train_size
-
-    print("Running on GPU:" + str(device_id))
-    print("Running for epochs:" + str(epochs))
 
     cuda_id = "cuda:" + str(device_id)
     device = torch.device(cuda_id)
@@ -454,58 +503,52 @@ if __name__ == "__main__":
     print("in_channels=",len(total_modalities))
     print("batch size = ",train_batch_size)
 
-    # configuration for different network architectures
-    if model_type == "UNET":
-        print("TRAINING WITH UNET")
-
-        if not legacy_unet:
-            model = theory_UNET(in_channels=len(total_modalities)).to(device)
+    # define progressive model
+    if "WMH" in dataset:
+        model = WMH_progressive_UNET(in_channels = 2,
+                                        out_channels= 1).to(device)
+    elif "ISLES" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 4,
+                                out_channels=1).to(device)
         else:
-            model = UNetv2(
-                spatial_dims=3,
-                in_channels=len(total_modalities),
-                out_channels=1,
-                kernel_size = (3,3,3),
-                channels=(16, 32, 64, 128, 256),
-                strides=((2,2,2),(2,2,2),(2,2,2),(2,2,2)),
-                num_res_units=2,
-                dropout=0.2,
-            ).to(device)
-
-        if load_pre_trained_model:
-            print("LOADING MODEL: ", load_model_path)
-            model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
-    elif model_type == "HEMIS_spatial_attention":
-        print("TRAINING WITH HEMIS SPATIAL ATTENTION")
-        model = HEMISv2(
-            post_seg_res_units=False,
-            fusion_type="spatial attention",
-            UNet_outs=12,
-            conv1_in=12,
-            conv1_out=12,
-            conv2_in=12,
-            conv2_out=12,
-            conv3_in=12,
-            pred_uncertainty=False,
-            grid_UNet=True,
-        ).to(device)
-    elif model_type == "MSFN":
-        model = MSFN(paired=False).to(device)
-    elif model_type == "MSFNP":
-        model = MSFN(paired=True).to(device)
-
-    # load pre-trained weights
-    if load_pre_trained_model:
-            print("LOADING MODEL: ", load_model_path)
-            model.load_state_dict(torch.load(load_model_path, map_location={"cuda:0":cuda_id,"cuda:1":cuda_id}))
-
+            model = ISLES_progressive_UNET(in_channels = 4,
+                                        out_channels= 1).to(device)
+            # model.load_state_dict(torch.load("results/ISLES_from_scratch_few/model/ISLES_from_scratch_few_BEST_ISLES.pth"), strict=False)
+            # model = ISLES_progresive_UNET_linear_combination(in_channels = 4,
+                                                            #   out_channels= 1).to(device)
+    elif "BRATS" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 4,
+                                out_channels=1).to(device)
+        else:
+            model = BRATS_progressive_UNET(in_channels = 4,
+                                        out_channels= 1).to(device)
+    elif "MSSEG" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 5,    
+                                out_channels=1).to(device)
+        else:
+            model = MSSEG_progressive_UNET(in_channels = 5,
+                                           out_channels= 1).to(device)
+    elif "ATLAS" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 1,
+                                out_channels=1).to(device)
+        else:
+            model = ATLAS_progressive_UNET(in_channels = 1,
+                                           out_channels= 1).to(device)
+    elif "TBI" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 4,
+                                out_channels=1).to(device)
+        else:
+            model = TBI_progressive_UNET(in_channels = 4,
+                                         out_channels= 1).to(device)
     # defined loss function and optimiser
     loss_function = DiceLoss(sigmoid=True)
-    optimizer = torch.optim.Adam(model.parameters(), lr=lr)
+    optimizer = torch.optim.Adam(model.parameters())
 
-    # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer=optimizer, mode="max", factor=0.2, patience=10, verbose=True,min_lr=lr_lower_lim)
-    # cyclic_scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer=optimizer, base_lr=1e-4, max_lr=1e-3, step_size_up=200, mode="triangular",cycle_momentum=False)
-    
     # initialise best metric variables
     best_metric_BRATS = -1
     best_metric_ATLAS = -1
@@ -522,7 +565,7 @@ if __name__ == "__main__":
     best_metric_epoch_WMH = -1
 
     metric_values = list()
-
+    
     # create save names for tensorboard logging
     if is_cluster:
         log_save = "/users/sedm6251/tests/runs/" + save_name
@@ -548,6 +591,13 @@ if __name__ == "__main__":
             for g in optimizer.param_groups:
                 g['lr'] = drop_learning_rate_value
 
+        # placeholders
+        PREDS = []
+        FEATS = []
+        FEATS1 = []
+
+        features = {}
+
         # each training loader is zipped together - there are different loaders for each dataset
         for batch_data in zip(*train_loaders):
  
@@ -555,6 +605,7 @@ if __name__ == "__main__":
 
             outputs = []
             labels = []
+        
 
             # dataset-specific handling of training data - TODO merge all into one function - evolved organically and is messy
             if "BRATS" in dataset:
@@ -668,6 +719,9 @@ if __name__ == "__main__":
                     if randomly_drop:
                         _, batch[img_index] = rand_set_channels_to_zero(channels_ISLES, batch[img_index])                    
                     input_data = torch.from_numpy(np.zeros((batch[img_index].shape[0],len(total_modalities),cropped_input_size[0],cropped_input_size[1],cropped_input_size[2]),dtype=np.float32))
+                    # print("input_data.shape",input_data.shape)
+                    # print("input_data[:,ISLES_channel_map,:,:,:]",input_data[:,ISLES_channel_map,:,:,:].shape)
+                    # print("batch[img_index].shape",batch[img_index].shape)
                     input_data[:,ISLES_channel_map,:,:,:] = batch[img_index]
                     input_data = input_data.to(device)
                 else:
@@ -764,10 +818,15 @@ if __name__ == "__main__":
                                 batch[img_index] = augment(batch[img_index])
                     input_data = batch[img_index].to(device)
                 label = batch[label_index].to(device)
+                
+                # extract features
+                # pretrained_model_features = extract_features(input_data,layers)
+                # print(pretrained_model_features)
                 out = model(input_data)
                 # utils.plot_slices([input_data, input_data, label, label, out, out], [64,100,64,100, 64, 100],2)
                 outputs.append(out)
                 labels.append(label)
+
 
 
             optimizer.zero_grad()
@@ -1012,6 +1071,7 @@ if __name__ == "__main__":
                         
                         roi_size = (cropped_input_size[0], cropped_input_size[1], cropped_input_size[2])
                         sw_batch_size = 1
+                        # val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
                         val_outputs = sliding_window_inference(input_data, roi_size, sw_batch_size, model)
                         val_outputs = [post_trans(i) for i in decollate_batch(val_outputs)]
                         # compute metric for current iteration
@@ -1040,4 +1100,3 @@ if __name__ == "__main__":
 
     # print(f"train completed, best_metric: {best_metric:.4f} at epoch: {best_metric_epoch}")
     writer.close()
-
