@@ -24,6 +24,9 @@ from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
 from Nets.WMH_progressive_unet import WMH_progressive_UNET
 from Nets.ISLES_progressive_unet import ISLES_progressive_UNET, ISLES_progresive_UNET_linear_combination
 from Nets.BRATS_progressive_unet import BRATS_progressive_UNET
+from Nets.MSSEG_progressive_unet import MSSEG_progressive_UNET
+from Nets.ATLAS_progressive_unet import ATLAS_progressive_UNET
+from Nets.TBI_progressive_unet import TBI_progressive_UNET
 import utils
 
 # function that creates the dataloader for training
@@ -174,6 +177,16 @@ if __name__ == "__main__":
     elif "BRATS" in dataset:
         manual_channel_map = [1,3,4,5]
         modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    elif "MSSEG" in dataset:
+        manual_channel_map = [0, 2, 3, 4, 1]
+        modalities_when_trained = ['FLAIR', 'SWI', 'T1', 'T1c', 'T2'] 
+    elif "ATLAS" in dataset:
+        manual_channel_map = [3]
+        modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] 
+    elif "TBI" in dataset:
+        manual_channel_map = [1,2,4,3]
+        modalities_when_trained = ['DP','FLAIR', 'T1', 'T1c', 'T2']
+
     # settings if doing stepwise drop of learning rate
     # drop_learning_rate = True
     drop_learning_rate = False
@@ -199,8 +212,13 @@ if __name__ == "__main__":
     elif "ISLES" in dataset:
         limited_data_size = 10
     elif "BRATS" in dataset:
-        liimited_data_size = 20
-
+        limited_data_size = 20
+    elif "MSSEG" in dataset:
+        limited_data_size = 20
+    elif "ATLAS" in dataset:
+        limited_data_size = 20
+    elif "TBI" in dataset:
+        llimited_data_size = 50
     
     #########################################################
     # *********  END OF CONFIGURABLE PARAMETERS  **********
@@ -313,7 +331,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_BRATS, val_loader_BRATS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
         else:   
-            train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
+            train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
         
         data_loader_map["BRATS"] = len(train_loaders)
         train_loaders.append(train_loader_BRATS)
@@ -335,7 +353,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_ATLAS, val_loader_ATLAS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
         else:
-            train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
+            train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size)
 
         data_loader_map["ATLAS"] = len(train_loaders)
         train_loaders.append(train_loader_ATLAS)
@@ -500,8 +518,33 @@ if __name__ == "__main__":
             # model = ISLES_progresive_UNET_linear_combination(in_channels = 4,
                                                             #   out_channels= 1).to(device)
     elif "BRATS" in dataset:
-        model = BRATS_progressive_UNET(in_channels = 4,
-                                       out_channels= 1).to(device)
+        if pretrain:
+            model = theory_UNET(in_channels = 4,
+                                out_channels=1).to(device)
+        else:
+            model = BRATS_progressive_UNET(in_channels = 4,
+                                        out_channels= 1).to(device)
+    elif "MSSEG" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 5,    
+                                out_channels=1).to(device)
+        else:
+            model = MSSEG_progressive_UNET(in_channels = 5,
+                                           out_channels= 1).to(device)
+    elif "ATLAS" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 1,
+                                out_channels=1).to(device)
+        else:
+            model = ATLAS_progressive_UNET(in_channels = 1,
+                                           out_channels= 1).to(device)
+    elif "TBI" in dataset:
+        if pretrain:
+            model = theory_UNET(in_channels = 4,
+                                out_channels=1).to(device)
+        else:
+            model = TBI_progressive_UNET(in_channels = 4,
+                                         out_channels= 1).to(device)
     # defined loss function and optimiser
     loss_function = DiceLoss(sigmoid=True)
     optimizer = torch.optim.Adam(model.parameters())

@@ -147,7 +147,7 @@ if __name__ == "__main__":
     limited_data_train_size = 10 #number of training images to use if training on limited data
 
     # settings if doing stepwise drop of learning rate
-    drop_learning_rate = True
+    drop_learning_rate = False 
     drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
     drop_learning_rate_value = 1e-4 # learning rate to drop to
 
