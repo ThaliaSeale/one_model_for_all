@@ -131,6 +131,9 @@ if __name__ == "__main__":
     pretrain = bool(int(sys.argv[6]))
     limited_data = bool(int(sys.argv[7]))
 
+    drop_learning_rate = True
+    drop_learning_rate_epoch = int(sys.argv[8]) # epoch at which to decrease the learning rate
+    
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     set_determinism(seed=1)
@@ -189,17 +192,18 @@ if __name__ == "__main__":
 
     # settings if doing stepwise drop of learning rate
     # drop_learning_rate = True
-    drop_learning_rate = False
+    # drop_learning_rate = False
 
-    drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
-    drop_learning_rate_value = 1e-5 # learning rate to drop to
+    # drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
+    # drop_learning_rate_value = 1e-5 # learning rate to drop to
+    drop_learning_rate_value = 5e-4
 
     legacy_unet = False
 
     # parameters that are unlikely to be needed
     is_cluster = False # if training on IBME cluster filepaths
     BRATS_two_channel_seg = False # if using different segmentation ground truths if both T2 and FLAIR are missing then ground truth is without edema
-    TBI_multi_channel_seg = True # similar to above but for TBI dataset and SWI missing
+    TBI_multi_channel_seg = False # similar to above but for TBI dataset and SWI missing
     model_type = "UNET" # change this if training a different model
     augment_modalities = False # if True, randomly add a non-linear combination of modalities to the training set for augmentation
     cropped_input_size = [128,128,128] 
@@ -215,10 +219,12 @@ if __name__ == "__main__":
         limited_data_size = 20
     elif "MSSEG" in dataset:
         limited_data_size = 20
+        # limited_data_size = 14
+        # print("LIMITING DATA TO 14")
     elif "ATLAS" in dataset:
         limited_data_size = 20
     elif "TBI" in dataset:
-        llimited_data_size = 50
+        limited_data_size = 50
     
     #########################################################
     # *********  END OF CONFIGURABLE PARAMETERS  **********
@@ -376,7 +382,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_MSSEG, val_loader_MSSEG = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size)
         else:
-            train_loader_MSSEG, val_loader_MSSEG = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size)
+            train_loader_MSSEG, val_loader_MSSEG = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size,limited_data=limited_data,limited_data_size=limited_data_size )
 
         data_loader_map["MSSEG"] = len(train_loaders)
         train_loaders.append(train_loader_MSSEG)
@@ -462,7 +468,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_TBI, val_loader_TBI = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
         else:
-            train_loader_TBI, val_loader_TBI = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
+            train_loader_TBI, val_loader_TBI = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size,limited_data=limited_data, limited_data_size=limited_data_size)
 
 
         data_loader_map["TBI"] = len(train_loaders)
@@ -505,46 +511,64 @@ if __name__ == "__main__":
 
     # define progressive model
     if "WMH" in dataset:
-        model = WMH_progressive_UNET(in_channels = 2,
+        if pretrain:
+            model = theory_UNET(in_channels = 2,
+                                out_channels=1).to(device)
+            print("Training from scratch.")
+        else:
+            model = WMH_progressive_UNET(in_channels = 2,
                                         out_channels= 1).to(device)
+            print("Training from pre-trained model.")
     elif "ISLES" in dataset:
         if pretrain:
             model = theory_UNET(in_channels = 4,
                                 out_channels=1).to(device)
+            print("Training from scratch.")
         else:
             model = ISLES_progressive_UNET(in_channels = 4,
                                         out_channels= 1).to(device)
-            # model.load_state_dict(torch.load("results/ISLES_from_scratch_few/model/ISLES_from_scratch_few_BEST_ISLES.pth"), strict=False)
-            # model = ISLES_progresive_UNET_linear_combination(in_channels = 4,
-                                                            #   out_channels= 1).to(device)
+            print("Training from pre-trained model.")
     elif "BRATS" in dataset:
         if pretrain:
             model = theory_UNET(in_channels = 4,
                                 out_channels=1).to(device)
+            print("Training from scratch.")
         else:
             model = BRATS_progressive_UNET(in_channels = 4,
                                         out_channels= 1).to(device)
+            print("Training from pre-trained model.")
     elif "MSSEG" in dataset:
         if pretrain:
             model = theory_UNET(in_channels = 5,    
                                 out_channels=1).to(device)
+            print("Training from scratch.")
         else:
             model = MSSEG_progressive_UNET(in_channels = 5,
                                            out_channels= 1).to(device)
+            print("Training from pre-trained model.")
     elif "ATLAS" in dataset:
         if pretrain:
             model = theory_UNET(in_channels = 1,
                                 out_channels=1).to(device)
+            print("Training from scratch.")
         else:
             model = ATLAS_progressive_UNET(in_channels = 1,
                                            out_channels= 1).to(device)
+            print("Training from pre-trained model.")
     elif "TBI" in dataset:
         if pretrain:
             model = theory_UNET(in_channels = 4,
                                 out_channels=1).to(device)
+            print("Training from scratch.")
         else:
-            model = TBI_progressive_UNET(in_channels = 4,
-                                         out_channels= 1).to(device)
+            print("Training from pre-trained model.")
+            if TBI_multi_channel_seg:
+                model = TBI_progressive_UNET(in_channels = 4,
+                                            out_channels= 3).to(device)
+            else:
+                model = TBI_progressive_UNET(in_channels = 4,
+                                             out_channels= 1).to(device)
+    
     # defined loss function and optimiser
     loss_function = DiceLoss(sigmoid=True)
     optimizer = torch.optim.Adam(model.parameters())

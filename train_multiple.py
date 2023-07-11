@@ -113,6 +113,7 @@ if __name__ == "__main__":
     save_name = str(sys.argv[3])
     dataset = str(sys.argv[4])
     randomly_drop = bool(int(sys.argv[5]))
+    train_limited_data = bool(int(sys.argv[6]))
 
     #########################################################
     # *********  ASSUMPTIONS ABOUT THE DATA  **********
@@ -143,12 +144,17 @@ if __name__ == "__main__":
     modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] # the modalities the model was trained on (alphabetical order necessary)
 
     # settings if training on limited data
-    train_limited_data = False
-    limited_data_train_size = 10 #number of training images to use if training on limited data
+    # train_limited_data = False
+    # limited_data_train_size = 10 #number of training images to use if training on limited data
+    if "ISLES" in dataset:
+        limited_data_train_size = 10
+    if "MSSEG" in dataset:
+        limited_data_train_size = 20
 
     # settings if doing stepwise drop of learning rate
-    drop_learning_rate = False 
-    drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
+    # drop_learning_rate = False 
+    drop_learning_rate = True
+    drop_learning_rate_epoch = 500 # epoch at which to decrease the learning rate
     drop_learning_rate_value = 1e-4 # learning rate to drop to
 
     # set true if using the older unet (net in file UNetv2.py)
@@ -274,7 +280,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_BRATS, val_loader_BRATS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
         else:   
-            train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size)
+            train_loader_BRATS, val_loader_BRATS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_BRATS,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_size=limited_data_train_size)
         
         data_loader_map["BRATS"] = len(train_loaders)
         train_loaders.append(train_loader_BRATS)
@@ -296,7 +302,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_ATLAS, val_loader_ATLAS = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
         else:
-            train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size)
+            train_loader_ATLAS, val_loader_ATLAS = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ATLAS,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_size=limited_data_train_size)
 
         data_loader_map["ATLAS"] = len(train_loaders)
         train_loaders.append(train_loader_ATLAS)
@@ -319,7 +325,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_MSSEG, val_loader_MSSEG = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size)
         else:
-            train_loader_MSSEG, val_loader_MSSEG = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size)
+            train_loader_MSSEG, val_loader_MSSEG = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_MSSEG,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_size=limited_data_train_size)
 
         data_loader_map["MSSEG"] = len(train_loaders)
         train_loaders.append(train_loader_MSSEG)
@@ -342,7 +348,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_ISLES, val_loader_ISLES = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
         else:
-            train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size)
+            train_loader_ISLES, val_loader_ISLES = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_ISLES,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_size=limited_data_train_size)
 
         data_loader_map["ISLES"] = len(train_loaders)
         train_loaders.append(train_loader_ISLES)
@@ -405,7 +411,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_TBI, val_loader_TBI = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
         else:
-            train_loader_TBI, val_loader_TBI = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size)
+            train_loader_TBI, val_loader_TBI = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_TBI,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_size=limited_data_train_size)
 
 
         data_loader_map["TBI"] = len(train_loaders)
@@ -430,7 +436,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_WMH, val_loader_WMH = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
         else:
-            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
+            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_train_size=limited_data_train_size)
 
         data_loader_map["WMH"] = len(train_loaders)
         train_loaders.append(train_loader_WMH)
