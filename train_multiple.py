@@ -154,8 +154,8 @@ if __name__ == "__main__":
     # settings if doing stepwise drop of learning rate
     # drop_learning_rate = False 
     drop_learning_rate = True
-    drop_learning_rate_epoch = 500 # epoch at which to decrease the learning rate
-    drop_learning_rate_value = 1e-4 # learning rate to drop to
+    drop_learning_rate_epoch = [int(i) for i in sys.argv[7].strip('[]').split(',')] # epochs in which to decrease the learning rate
+    drop_learning_rate_value = [5e-4, 2.5e-4]
 
     # set true if using the older unet (net in file UNetv2.py)
     legacy_unet = False
