@@ -550,9 +550,10 @@ if __name__ == "__main__":
         step = 0
 
         # drop learning rate if desired
-        if drop_learning_rate and epoch == drop_learning_rate_epoch:
+        if drop_learning_rate and epoch in drop_learning_rate_epoch:
             for g in optimizer.param_groups:
-                g['lr'] = drop_learning_rate_value
+                g['lr'] = drop_learning_rate_value[0]
+                drop_learning_rate_value = drop_learning_rate_value[1:]
 
         # each training loader is zipped together - there are different loaders for each dataset
         for batch_data in zip(*train_loaders):
