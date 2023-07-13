@@ -154,8 +154,8 @@ if __name__ == "__main__":
     # settings if doing stepwise drop of learning rate
     # drop_learning_rate = False 
     drop_learning_rate = True
-    drop_learning_rate_epoch = 500 # epoch at which to decrease the learning rate
-    drop_learning_rate_value = 1e-4 # learning rate to drop to
+    drop_learning_rate_epoch = [int(i) for i in sys.argv[7].strip('[]').split(',')] # epochs in which to decrease the learning rate
+    drop_learning_rate_value = [5e-4, 2.5e-4]
 
     # set true if using the older unet (net in file UNetv2.py)
     legacy_unet = False
@@ -550,9 +550,10 @@ if __name__ == "__main__":
         step = 0
 
         # drop learning rate if desired
-        if drop_learning_rate and epoch == drop_learning_rate_epoch:
+        if drop_learning_rate and epoch in drop_learning_rate_epoch:
             for g in optimizer.param_groups:
-                g['lr'] = drop_learning_rate_value
+                g['lr'] = drop_learning_rate_value[0]
+                drop_learning_rate_value = drop_learning_rate_value[1:]
 
         # each training loader is zipped together - there are different loaders for each dataset
         for batch_data in zip(*train_loaders):

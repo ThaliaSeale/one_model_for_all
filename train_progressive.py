@@ -132,7 +132,7 @@ if __name__ == "__main__":
     limited_data = bool(int(sys.argv[7]))
 
     drop_learning_rate = True
-    drop_learning_rate_epoch = int(sys.argv[8]) # epoch at which to decrease the learning rate
+    drop_learning_rate_epoch = [int(i) for i in sys.argv[8].strip('[]').split(',')] # epochs in which to decrease the learning rate
     
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     # drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
     # drop_learning_rate_value = 1e-5 # learning rate to drop to
-    drop_learning_rate_value = 5e-4
+    drop_learning_rate_value = [5e-4, 2.5e-4, 1.25e-4]
 
     legacy_unet = False
 
@@ -611,9 +611,10 @@ if __name__ == "__main__":
         step = 0
 
         # drop learning rate if desired
-        if drop_learning_rate and epoch == drop_learning_rate_epoch:
+        if drop_learning_rate and epoch in drop_learning_rate_epoch:
             for g in optimizer.param_groups:
-                g['lr'] = drop_learning_rate_value
+                g['lr'] = drop_learning_rate_value[0]
+                drop_learning_rate_value = drop_learning_rate_value[1:]
 
         # placeholders
         PREDS = []
