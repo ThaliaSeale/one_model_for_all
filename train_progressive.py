@@ -196,7 +196,7 @@ if __name__ == "__main__":
 
     # drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
     # drop_learning_rate_value = 1e-5 # learning rate to drop to
-    drop_learning_rate_value = [5e-4, 2.5e-4]
+    drop_learning_rate_value = [5e-4, 2.5e-4, 1.25e-4]
 
     legacy_unet = False
 

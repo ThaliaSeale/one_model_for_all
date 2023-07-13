@@ -11,16 +11,18 @@ run_experiment () {
 # $5 is pretrain
 # $6 is limited_data
 
-run_experiment "ISLES_pretrained_all1421" train_progressive.py ISLES 0 0 0 "[350,700]"
-run_experiment "ISLES_pretrained_limited1421" train_progressive.py ISLES 0 0 1 "[450,900]" 
-run_experiment "ISLES_scratch_all1421" train_progressive.py ISLES 0 1 0 "[600,1200]" 
-run_experiment "ISLES_scratch_limited1421" train_progressive.py ISLES 0 1 1 "[500,700]"
+run_experiment "ISLES_pretrained_all1421" train_progressive.py ISLES 0 0 0 "[400,700,900]"
+run_experiment "ISLES_pretrained_limited1421" train_progressive.py ISLES 0 0 1 "[450,600]" 
+run_experiment "ISLES_scratch_all1421" train_progressive.py ISLES 0 1 0 "[400,700,900]" 
+run_experiment "ISLES_scratch_limited1421" train_progressive.py ISLES 0 1 1 "[700]"
+
+current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
 mkdir results/"ISLES_naive_pretrained_limited_${current_time}"
-python train_multiple.py 1 1000 "ISLES_naive_pretrained_limited_${current_time}" ISLES 0 1 "[500,1200]" | tee results/"ISLES_naive_pretrained_limited_${current_time}"/log.txt
+python train_multiple.py 1 1000 "ISLES_naive_pretrained_limited_${current_time}" ISLES 0 1 "[600]" | tee results/"ISLES_naive_pretrained_limited_${current_time}"/log.txt
 
 mkdir results/"ISLES_naive_pretrained_all_${current_time}"
-python train_multiple.py 1 1000 "ISLES_naive_pretrained_all_${current_time}" ISLES 0 0 "[600,1200]" | tee results/"ISLES_naive_pretrained_all_${current_time}"
+python train_multiple.py 1 1000 "ISLES_naive_pretrained_all_${current_time}" ISLES 0 0 "[500]" | tee results/"ISLES_naive_pretrained_all_${current_time}"
 /log.txt
 
 # run_experiment "ISLES_pretrained_limited_lr_drop2" train_progressive.py ISLES 0 0 1 500 
