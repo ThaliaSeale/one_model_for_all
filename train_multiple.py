@@ -146,10 +146,20 @@ if __name__ == "__main__":
     # settings if training on limited data
     # train_limited_data = False
     # limited_data_train_size = 10 #number of training images to use if training on limited data
-    if "ISLES" in dataset:
-        limited_data_train_size = 10
-    if "MSSEG" in dataset:
+    if "WMH" in dataset:
         limited_data_train_size = 20
+    elif "ISLES" in dataset:
+        limited_data_train_size = 10
+    elif "BRATS" in dataset:
+        limited_data_train_size = 20
+    elif "MSSEG" in dataset:
+        limited_data_train_size = 20
+        # limited_data_train_size = 14
+        # print("LIMITING DATA TO 14")
+    elif "ATLAS" in dataset:
+        limited_data_train_size = 20
+    elif "TBI" in dataset:
+        limited_data_train_size = 50
 
     # settings if doing stepwise drop of learning rate
     # drop_learning_rate = False 
@@ -163,7 +173,7 @@ if __name__ == "__main__":
     # parameters that are unlikely to be needed
     is_cluster = False # if training on IBME cluster filepaths
     BRATS_two_channel_seg = False # if using different segmentation ground truths if both T2 and FLAIR are missing then ground truth is without edema
-    TBI_multi_channel_seg = True # similar to above but for TBI dataset and SWI missing
+    TBI_multi_channel_seg = False# similar to above but for TBI dataset and SWI missing
     model_type = "UNET" # change this if training a different model
     augment_modalities = False # if True, randomly add a non-linear combination of modalities to the training set for augmentation
     cropped_input_size = [128,128,128] 
