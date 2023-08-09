@@ -11,10 +11,10 @@ run_experiment () {
 # $5 is pretrain
 # $6 is limited_data
 
-run_experiment "ISLES_pretrained_all" train_progressive.py ISLES 0 0 0 "[400,700,900]"
-run_experiment "ISLES_pretrained_limited" train_progressive.py ISLES 0 0 1 "[450,600]" 
-run_experiment "ISLES_scratch_all" train_progressive.py ISLES 0 1 0 "[400,700,900]" 
-run_experiment "ISLES_scratch_limited" train_progressive.py ISLES 0 1 1 "[500,700]"
+# run_experiment "ISLES_pretrained_all" train_progressive.py ISLES 0 0 0 "[400,700,900]"
+# run_experiment "ISLES_pretrained_limited" train_progressive.py ISLES 0 0 1 "[450,600]" 
+# run_experiment "ISLES_scratch_all" train_progressive.py ISLES 0 1 0 "[400,700,900]" 
+# run_experiment "ISLES_scratch_limited" train_progressive.py ISLES 0 1 1 "[500,700]"
 
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
