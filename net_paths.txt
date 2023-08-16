@@ -1,0 +1,140 @@
+Train on multiple datasets, except one (with modality dropout)
+
+excl BRATS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS_MSSEG_TBI_WMH/UNET/UNET_ATLAS_MSSEG_TBI_WMH_Epoch_199.pth
+
+excl ATLAS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth
+
+excl ISLES (NOTE old UNet)
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth
+
+excl MSSEG
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_BRATS.pth
+
+excl TBI
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_MSSEG_WMH_BEST_BRATS.pth
+
+excl WMH
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth
+
+
+
+
+REFINE a pre-trained model on a single dataset with ALL images (no modality dropout)
+
+BRATS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/UNET_BRATS_ALL_PRE_TRAIN_ATLAS_MSSEG_TBI_WMH_BEST_BRATS.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS_MSSEG_TBI_WMH/UNET/UNET_ATLAS_MSSEG_TBI_WMH_BEST_TBI.pth
+
+ATLAS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/UNET_ATLAS_PRE_TRAIN_BRATS_MSSEG_TBI_WMH_BEST_ATLAS.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth
+
+ISLES (NOTE: BEST_ISLES with DSC 0.6013 model was not saved, this one achieves 0.5825)
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ISLES/PRETRAINED/UNET_ISLES_PRE_TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH_Epoch_49.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth
+
+MSSEG (NOTE: BEST_MSSEG with DSC 0.6944 not saved. this one achieves 0.6844)
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_MSSEG/UNET_MSSEG_PRE_TRAIN_BRATS_ATLAS_TBI_WMH_Epoch_99.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_ATLAS.pth
+
+TBI
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_TBI/UNET_TBI_PRE_TRAIN_BRATS_ATLAS_MSSEG_WMH_BEST_TBI.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_MSSEG_WMH_BEST_WMH.pth
+
+WMH
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/UNET_WMH_PRE_TRAIN_BRATS_ATLAS_MSSEG_TBI_BEST_WMH.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth
+
+
+
+
+REFINE a pre-trained model on a single dataset with FEW images (no modality dropout)
+
+BRATS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/UNET_BRATS_ALL_FIRST_20_PRE_TRAIN_ATLAS_MSSEG_TBI_WMH_BEST_BRATS.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS_MSSEG_TBI_WMH/UNET/UNET_ATLAS_MSSEG_TBI_WMH_BEST_TBI.pth
+
+ATLAS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/UNET_ATLAS_20_PRE_TRAIN_BRATS_MSSEG_TBI_WMH_BEST_ATLAS.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth
+
+ISLES
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ISLES/UNET_ISLES_10_PRE_TRAIN_BEST_ISLES.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI_WMH/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_WMH_RAND_Epoch_199.pth
+
+MSSEG
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_MSSEG/UNET_MSSEG_20_PRE_TRAIN_BRATS_ATLAS_TBI_WMH_BEST_MSSEG.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_ATLAS.pth
+
+TBI
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_TBI/UNET_TBI_50_PRE_TRAIN_BRATS_ATLAS_MSSEG_WMH_BEST_TBI.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_MSSEG_WMH_BEST_WMH.pth
+
+WMH
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/UNET_WMH_FIRST_20_PRE_TRAIN_BRATS_ATLAS_MSSEG_TBI_BEST_WMH.pth
+
+refined from model at /home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth
+
+
+
+
+Train one dataset from SCRATCH with ALL images (no modality dropout)
+BRATS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/UNET/ALL/UNET_BRATS_ALL_BEST_BRATS.pth
+
+ATLAS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/UNET/UNET_ATLAS_ALL_BATCH_3_BEST_ATLAS.pth
+
+ISLES (NOTE old UNET)
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ISLES/UNET/All/UNET_ISLES_ALL_BATCH_2_Epoch_199.pth
+
+MSSEG (NOTE old UNET)
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_MSSEG/UNET/UNET_MSSEG_ALL_BATCH_2_BEST_MSSEG.pth
+
+TBI
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_TBI/UNET/UNET_TBI_ALL_BEST_TBI.pth
+
+WMH (NOTE old UNET)
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/UNET/UNET_WMH_ALL_BEST_WMH.pth
+
+
+
+
+Train one dataset from SCRATCH with FEW images (no modality dropout)
+
+BRATS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS/UNET_BRATS_ALL_FIRST_20_BEST_BRATS.pth
+
+ATLAS
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS/UNET_ATLAS_20_BEST_ATLAS.pth
+
+ISLES
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ISLES/UNET_ISLES_10_BEST_ISLES.pth
+
+MSSEG
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_MSSEG/UNET_MSSEG_20_BEST_MSSEG.pth
+
+TBI
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_TBI/UNET/UNET_TBI_ALL_FIRST_50_BEST_TBI.pth
+
+WMH
+/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/UNET_WMH_FIRST_20_BEST_WMH.pth
+
+
+
+
+
+

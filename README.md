@@ -1,6 +1,17 @@
-# One Model For All
+# PROGRESSIVE NETWORKS FOR TRANSFER LEARNING IN
+MEDICAL IMAGE SEGMENTATION
 
 Creating a CNN model architecture that can handle any input modalities for biomedical MRI segmentation. Currently networks are trained on datasets individually - e.g. on Brain Tumour separately to stroke. This ignores the possiblility that there may be potential to learn inherent features of "healthy" and "unhealthy" matter. The main problem with this is that MRI comes in multiple different modalities. Most network architectures require this channel dimensionality to be predefined at training. We would like to make use of modalities never seen at training and be able to take in an undefined number of modalities.
+Based on base architecture from "One Model For All".
+
+Machine learning (ML) has the potential for automating a wide variety of tasks in medical imaging, such as segmentation.
+However, both the limited ability of ML models to generalise from the source domain to the target domain due to distribution shift and the simultaneous paucity of data from the target domain are obstacles to the deployment of ML in a clinical setting. 
+A potential remedy for this issue is to use a model pre-trained on data from a related dataset or task that may later be *finetuned*.
+This process adjusts model parameters to suit the target domain, using the limited data available. 
+However, in some cases, pre-training actually negatively affects training, initialising the model parameters in a poor local minimum that causes the model to perform worse than training from scratch even after finetuning.
+
+The code in this repository implements a Progressive U-Net, uses a progressive network architecture to expand the capacity of a pre-trained U-Net to use any salient features obtained in pre-training while enabling the model to continue learning features unique to the new task.
+The base model is a U-Net for image segmentation on 6 different 3D MRI image datasets which each focus on a different pathology and set of MRI image modalities, proposed by the "One Model for All Project".
 
 Networks and required components are in the Nets folder, scripts used for pre-processing in pre_processing and all scripts for various train and test configurations are in the main folder.
 
