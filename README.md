@@ -1,5 +1,4 @@
-# PROGRESSIVE NETWORKS FOR TRANSFER LEARNING IN
-MEDICAL IMAGE SEGMENTATION
+# PROGRESSIVE NETWORKS FOR TRANSFER LEARNING INMEDICAL IMAGE SEGMENTATION
 
 Creating a CNN model architecture that can handle any input modalities for biomedical MRI segmentation. Currently networks are trained on datasets individually - e.g. on Brain Tumour separately to stroke. This ignores the possiblility that there may be potential to learn inherent features of "healthy" and "unhealthy" matter. The main problem with this is that MRI comes in multiple different modalities. Most network architectures require this channel dimensionality to be predefined at training. We would like to make use of modalities never seen at training and be able to take in an undefined number of modalities.
 Based on base architecture from "One Model For All".
@@ -10,8 +9,10 @@ A potential remedy for this issue is to use a model pre-trained on data from a r
 This process adjusts model parameters to suit the target domain, using the limited data available. 
 However, in some cases, pre-training actually negatively affects training, initialising the model parameters in a poor local minimum that causes the model to perform worse than training from scratch even after finetuning.
 
-The code in this repository implements a Progressive U-Net, uses a progressive network architecture to expand the capacity of a pre-trained U-Net to use any salient features obtained in pre-training while enabling the model to continue learning features unique to the new task.
-The base model is a U-Net for image segmentation on 6 different 3D MRI image datasets which each focus on a different pathology and set of MRI image modalities, proposed by the "One Model for All Project".
+The code in this repository implements a Progressive U-Net, which uses a progressive network architecture to expand the capacity of a pre-trained U-Net to use any salient features obtained in pre-training while enabling the model to continue learning features unique to the new task.
+The base model is a U-Net for image segmentation on 6 different 3D MRI image datasets which each focus on a different pathology and set of MRI image modalities, proposed by the "One Model for All" project.
+
+# Folder descriptions
 
 Networks and required components are in the Nets folder, scripts used for pre-processing in pre_processing and all scripts for various train and test configurations are in the main folder.
 
@@ -25,7 +26,41 @@ THE ORDER OF THE MODALITY CHANNELS IN EACH DATASET IS ASSUMED TO BE:
 * WMH: ["FLAIR", "T1"]
 
 # Scripts
-## train_multiple.py
+
+## `Nets/*_progressive_unet.py`
+
+Progressive U-Nets for training on each of the datasets. There are individual files for each dataset as the forward hook code does not work outside of the file.
+
+**The cuda device needs to be changed in these files as well as specified in using the command in the terminal.**
+
+## `Nets/theory_UNET.py`
+
+Contains code for the base U-Net and the progressive U-Net. `theory_UNET_progressive_cluster.py` also contains code for a progressive net with a reduced number of parameters.
+
+## `misc`
+
+Contains some shell scripts for downloading and uploading the data to a cluster.
+
+## `experiments_*.sh`
+
+Shell scripts for running experiments. 
+
+## `train_progressive.py`
+
+Contains code for training the progressive U-net. Based on the training procedure from `train_model.py` (see below).
+
+### Arguments:
+
+* 1 - Device ID -> the cuda GPU ID to use for training
+* 2 - Epochs -> number of epochs to train
+* 3 - Save Name -> What to save the model and tensorboard files as
+* 4 - Dataset -> The dataset to train
+* 5 - Randomly Drop (Bool) -> Whether or not to randomly drop modalities
+* 6 - Pretrain -> Whether to train from scratch or use the progressive U-Net architecture with a pretrained column.
+* 7 - Limited Data -> Whether to use the limited data size or to train on the full dataset.
+* 8 - Epochs to drop learning rate -> List of epochs to drop the learning rate
+
+## `train_multiple.py`
 - Contains the code for training multiple databases with heterogeneous modalities
 - Training Method is to have class balance across datasets
 - Can train any of the nets in this project
@@ -36,6 +71,7 @@ THE ORDER OF THE MODALITY CHANNELS IN EACH DATASET IS ASSUMED TO BE:
 * 3 - Save Name -> What to save the model and tensorboard files as
 * 4 - Dataset -> The dataset to train
 * 5 - Randomly Drop (Bool) -> Whether or not to randomly drop modalities
+* 6 - Pretrain -> Whether to train from scratch or use the progressive U-Net architecture with a pretrained column.
 
 Example command:
 python train_multiple.py 0 1000 my_save_name BRATS_ATLAS_ISLES 1
