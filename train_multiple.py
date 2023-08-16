@@ -139,17 +139,62 @@ if __name__ == "__main__":
 
     # settings for refinement training from a pre-trained model
     load_pre_trained_model = True 
-    load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
-    manual_channel_map = [1,3,5,2] # the slots the modalities of the new dataset should be placed in
-    modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] # the modalities the model was trained on (alphabetical order necessary)
+
+    if "WMH" in dataset:
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
+    elif "ISLES" in dataset:
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
+    elif "BRATS" in dataset:
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_ATLAS_MSSEG_TBI_WMH/UNET/UNET_ATLAS_MSSEG_TBI_WMH_BEST_TBI.pth"
+    elif "MSSEG" in dataset:
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_ATLAS.pth"
+    elif "ATLAS" in dataset:
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_MSSEG_TBI_WMH_BEST_BRATS.pth"
+    elif "TBI" in dataset:
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_MSSEG_WMH_BEST_MSSEG.pth"
+
+    if "WMH" in dataset:
+        # channel map for WMH
+        manual_channel_map = [1,3]
+        # modalities when trained for WMH
+        modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    elif "ISLES" in dataset:
+        # channel map for ISLES
+        manual_channel_map = [1,3,5,2] # not sure if I did this correctly
+        # modalities when trained for ISLES 
+        modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    elif "BRATS" in dataset:
+        manual_channel_map = [1,3,4,5]
+        modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+    elif "MSSEG" in dataset:
+        manual_channel_map = [0, 2, 3, 4, 1]
+        modalities_when_trained = ['FLAIR', 'SWI', 'T1', 'T1c', 'T2'] 
+    elif "ATLAS" in dataset:
+        manual_channel_map = [3]
+        modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] 
+    elif "TBI" in dataset:
+        manual_channel_map = [1,2,4,3]
+        modalities_when_trained = ['DP','FLAIR', 'T1', 'T1c', 'T2']
+    # manual_channel_map = [1,3,5,2] # the slots the modalities of the new dataset should be placed in
+    # modalities_when_trained = ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2'] # the modalities the model was trained on (alphabetical order necessary)
 
     # settings if training on limited data
     # train_limited_data = False
     # limited_data_train_size = 10 #number of training images to use if training on limited data
-    if "ISLES" in dataset:
-        limited_data_train_size = 10
-    if "MSSEG" in dataset:
+    if "WMH" in dataset:
         limited_data_train_size = 20
+    elif "ISLES" in dataset:
+        limited_data_train_size = 10
+    elif "BRATS" in dataset:
+        limited_data_train_size = 20
+    elif "MSSEG" in dataset:
+        limited_data_train_size = 20
+        # limited_data_train_size = 14
+        # print("LIMITING DATA TO 14")
+    elif "ATLAS" in dataset:
+        limited_data_train_size = 20
+    elif "TBI" in dataset:
+        limited_data_train_size = 50
 
     # settings if doing stepwise drop of learning rate
     # drop_learning_rate = False 
@@ -163,7 +208,7 @@ if __name__ == "__main__":
     # parameters that are unlikely to be needed
     is_cluster = False # if training on IBME cluster filepaths
     BRATS_two_channel_seg = False # if using different segmentation ground truths if both T2 and FLAIR are missing then ground truth is without edema
-    TBI_multi_channel_seg = True # similar to above but for TBI dataset and SWI missing
+    TBI_multi_channel_seg = False# similar to above but for TBI dataset and SWI missing
     model_type = "UNET" # change this if training a different model
     augment_modalities = False # if True, randomly add a non-linear combination of modalities to the training set for augmentation
     cropped_input_size = [128,128,128] 
@@ -436,7 +481,7 @@ if __name__ == "__main__":
         if crop_on_label:
             train_loader_WMH, val_loader_WMH = utils.create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size)
         else:
-            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_train_size=limited_data_train_size)
+            train_loader_WMH, val_loader_WMH = create_dataloader(val_size=val_size, images=images,segs=segs, workers=workers,train_batch_size=train_batch_size,total_train_data_size=data_size,current_train_data_size=train_size_WMH,cropped_input_size=cropped_input_size,limited_data=train_limited_data,limited_data_size=limited_data_train_size)
 
         data_loader_map["WMH"] = len(train_loaders)
         train_loaders.append(train_loader_WMH)
@@ -461,6 +506,7 @@ if __name__ == "__main__":
     print("batch size = ",train_batch_size)
 
     # configuration for different network architectures
+    print("Total modalities:", total_modalities)
     if model_type == "UNET":
         print("TRAINING WITH UNET")
 

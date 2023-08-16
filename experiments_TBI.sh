@@ -12,15 +12,15 @@ run_experiment () {
 # $6 is limited_data
 
 
-run_experiment "TBI_pretrained_limited" train_progressive.py TBI 0 0 1 "[300,1200]" 
-run_experiment "TBI_pretrained_all" train_progressive.py TBI 0 0 0 500 "[1200]"
-run_experiment "TBI_scratch_limited" train_progressive.py TBI 0 1 1 500 "[1200]"
-run_experiment "TBI_scratch_all" train_progressive.py TBI 0 1 0 500 "[1200]"
+run_experiment "TBI_reduced_pretrained_limited" train_progressive.py TBI 0 0 1 "[300,500]" 
+# run_experiment "TBI_reduced_pretrained_all" train_progressive.py TBI 1 0 0 500 "[500,700]"
+# run_experiment "TBI_scratch_limited" train_progressive.py TBI 0 1 1 500 "[250]"
+# run_experiment "TBI_scratch_all" train_progressive.py TBI 0 1 0 500 "[500,620]"
 
-current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+# current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
-mkdir results/"TBI_naive_pretrained_limited_${current_time}"
-python train_multiple.py 1 1000 "TBI_naive_pretrained_limited_${current_time}" TBI 0 1 "[600,1200]" | tee results/"TBI_naive_pretrained_limited_${current_time}"/log.txt
+# mkdir results/"TBI_naive_pretrained_limited_${current_time}"
+# python train_multiple.py 1 1000 "TBI_naive_pretrained_limited_${current_time}" TBI 0 1 "[600,1200]" | tee results/"TBI_naive_pretrained_limited_${current_time}"/log.txt
 
-mkdir results/"TBI_naive_pretrained_all_${current_time}"
-python train_multiple.py 1 1000 "TBI_naive_pretrained_all_${current_time}" TBI 0 0 "[600,1200]" | tee results/"TBI_naive_pretrained_all_${current_time}"/log.txt
+# mkdir results/"TBI_naive_pretrained_all_${current_time}"
+# python train_multiple.py 1 1000 "TBI_naive_pretrained_all_${current_time}" TBI 0 0 "[600,1200]" | tee results/"TBI_naive_pretrained_all_${current_time}"/log.txt

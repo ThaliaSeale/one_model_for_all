@@ -1,4 +1,4 @@
-from Nets.theory_UNET_progressive import theory_UNET, theory_UNET_progressive, theory_UNET_reduced_progressive
+from Nets.theory_UNET_progressive import theory_UNET, theory_UNET_progressive
 
 import torch
 def get_features(name):
@@ -13,18 +13,17 @@ def extract_features(input_data,layers):
         pretrained_model_features.append(features[layer])
     return pretrained_model_features
 
-cuda_id = "cuda:0" # this needs to be changed when running the model
+cuda_id = "cuda:1" # this needs to be changed when running the model
 # cuda_id = "cuda:1" # this needs to be changed when running the model
 device = torch.device(cuda_id)
 torch.cuda.set_device(cuda_id)
     
 # pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_MSSEG_WMH_BEST_MSSEG.pth"
-
+pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
 print("LOADING PRETRAINED MODEL:", pretrained_model_path)
 
-manual_channel_map = [1,2,4,3] # not sure if I did this correctly
-modalities_when_trained =  ['DP', 'FLAIR', 'T1', 'T1c', 'T2'] 
+manual_channel_map = [1,3,5,6] # not sure if I did this correctly
+modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
 total_modalities = modalities_when_trained
 
 pretrained_model = theory_UNET(in_channels = len(modalities_when_trained),
@@ -40,7 +39,7 @@ for layer in layers:
     getattr(pretrained_model,layer).register_forward_hook(get_features(layer))
 features = {} # placeholder for the features
 
-class TBI_progressive_UNET(theory_UNET_progressive):
+class ISLES_progressive_UNET(theory_UNET_progressive):
 
     def __init__(self,
             in_channels: int,
@@ -53,26 +52,7 @@ class TBI_progressive_UNET(theory_UNET_progressive):
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
 
-        pretrained_input = x[:,0:5,:,:,:]
-        pretrained_features = extract_features(pretrained_input,layers) 
-        x = x[:,manual_channel_map,:,:,:] # extracting only non-empty modalities
-        return super().forward(x,pretrained_features)
-
-
-class TBI_reduced_progressive_UNET(theory_UNET_reduced_progressive):
-
-    def __init__(self,
-            in_channels: int,
-            out_channels:int = 1,
-            last_layer_conv_only:bool = True
-        ) -> None:
-        super().__init__(in_channels,out_channels,last_layer_conv_only)
-
-        self.pretrained_model = pretrained_model
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-
-        pretrained_input = x[:,0:5,:,:,:]
+        pretrained_input = x[:,0:6,:,:,:] # first 6 modalities were seen, there rest weren't
         pretrained_features = extract_features(pretrained_input,layers) 
         x = x[:,manual_channel_map,:,:,:] # extracting only non-empty modalities
         return super().forward(x,pretrained_features)

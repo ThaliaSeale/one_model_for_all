@@ -18,7 +18,7 @@ device = torch.device(cuda_id)
 torch.cuda.set_device(cuda_id)
     
 # pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_WMH/UNET_WMH_FIRST_20_PRE_TRAIN_BRATS_ATLAS_MSSEG_TBI_BEST_WMH.pth"
+pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
 print("LOADING PRETRAINED MODEL:", pretrained_model_path)
 
 manual_channel_map = [1,3] # not sure if I did this correctly

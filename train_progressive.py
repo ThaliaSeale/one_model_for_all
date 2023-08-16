@@ -22,11 +22,11 @@ from create_modality import create_modality
 from Nets.multi_scale_fusion_net import MSFN
 from Nets.theory_UNET import theory_UNET, theory_UNET_progressive
 from Nets.WMH_progressive_unet import WMH_progressive_UNET
-from Nets.ISLES_progressive_unet import ISLES_progressive_UNET, ISLES_progresive_UNET_linear_combination
+from Nets.ISLES_progressive_unet import ISLES_progressive_UNET
 from Nets.BRATS_progressive_unet import BRATS_progressive_UNET
 from Nets.MSSEG_progressive_unet import MSSEG_progressive_UNET
 from Nets.ATLAS_progressive_unet import ATLAS_progressive_UNET
-from Nets.TBI_progressive_unet import TBI_progressive_UNET
+from Nets.TBI_progressive_unet import TBI_progressive_UNET, TBI_reduced_progressive_UNET
 import utils
 
 # function that creates the dataloader for training
@@ -566,7 +566,10 @@ if __name__ == "__main__":
                 model = TBI_progressive_UNET(in_channels = 4,
                                             out_channels= 3).to(device)
             else:
-                model = TBI_progressive_UNET(in_channels = 4,
+                # model = TBI_progressive_UNET(in_channels = 4,
+                #                              out_channels= 1).to(device)
+                print("TESTING REDUCED UNET")
+                model = TBI_reduced_progressive_UNET(in_channels = 4,
                                              out_channels= 1).to(device)
     
     # defined loss function and optimiser
