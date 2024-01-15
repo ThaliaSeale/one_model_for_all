@@ -136,8 +136,9 @@ if __name__ == "__main__":
     
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    set_determinism(seed=1)
-    print("determinism seed = 1")
+    seed = random.randint(0,1000)
+    set_determinism(seed=seed)
+    print(f"determinism seed = {seed}")
 
     
     if pretrain:
@@ -196,7 +197,7 @@ if __name__ == "__main__":
 
     # drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
     # drop_learning_rate_value = 1e-5 # learning rate to drop to
-    drop_learning_rate_value = [5e-4, 2.5e-4, 1.25e-4]
+    drop_learning_rate_value = [0.001, 0.0001]
 
     legacy_unet = False
 
@@ -211,20 +212,22 @@ if __name__ == "__main__":
 
     # limited_data = True
     # limited_data = False
-    if "WMH" in dataset:
+    if "BRATS" in dataset:
+        limited_data_size = 20
+    elif "ATLAS" in dataset:
         limited_data_size = 20
     elif "ISLES" in dataset:
         limited_data_size = 10
-    elif "BRATS" in dataset:
-        limited_data_size = 20
     elif "MSSEG" in dataset:
         limited_data_size = 20
         # limited_data_size = 14
         # print("LIMITING DATA TO 14")
-    elif "ATLAS" in dataset:
-        limited_data_size = 20
     elif "TBI" in dataset:
         limited_data_size = 50
+    elif "WMH" in dataset:
+        limited_data_size = 20
+
+    data_root = "/data_hd1/data/brain/brain_lesions_wentian_preproc"
     
     #########################################################
     # *********  END OF CONFIGURABLE PARAMETERS  **********
@@ -323,7 +326,8 @@ if __name__ == "__main__":
             else:
                 seg_path = "/data/sedm6251/BRATS/BRATS_merged_labels_inc_edema"
         else:
-            img_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_Normalised_with_brainmask/normed"
+            # img_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_Normalised_with_brainmask/normed"
+            img_path = data_root + "/BRATS_Decathlon_2016_17/BRATS_Normalised_with_brainmask/normed"
             if BRATS_two_channel_seg:
                 seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/two_channel_labels"
             else:
@@ -351,8 +355,10 @@ if __name__ == "__main__":
             img_path_ATLAS = "/data/sedm6251/ATLAS/normed_images"
             seg_path_ATLAS = "/data/sedm6251/ATLAS/trimmed_labels_ints"
         else:
-            img_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/normed_images"
-            seg_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/trimmed_labels_ints"
+            # img_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/normed_images"
+            img_path_ATLAS = data_root + "/ATLAS/normed_images"
+            # seg_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/trimmed_labels_ints"
+            seg_path_ATLAS = data_rot + "/ATLAS/trimmed_labels_ints"
         images = sorted(glob(os.path.join(img_path_ATLAS, "*_normed.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path_ATLAS, "*_label_trimmed.nii.gz")))
 
@@ -374,8 +380,10 @@ if __name__ == "__main__":
             img_path = "/data/sedm6251/MSSEG/Normed"
             seg_path = "/data/sedm6251/MSSEG/Labels"
         else:
-            img_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Normed"
-            seg_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Labels"
+            # img_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Normed"
+            img_path = data_root + "/MSSEG_2016/Normed"
+            # seg_path = "/home/sedm6251/projectMaterial/datasets/MSSEG_2016/Labels"
+            seg_path = data_root +  "/MSSEG_2016/Labels"
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
@@ -397,8 +405,8 @@ if __name__ == "__main__":
             img_path = "/data/sedm6251/ISLES/images"
             seg_path = "/data/sedm6251/ISLES/labels"
         else:
-            img_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/images"
-            seg_path = "/home/sedm6251/projectMaterial/baseline_models/ISLES2015/Data/labels"
+            img_path = data_root + "/ISLES2015/Data/images"
+            seg_path = data_root + "/ISLES2015/Data/labels"
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 
@@ -438,15 +446,23 @@ if __name__ == "__main__":
             print(train_seg_path)
             print(val_seg_path)
         else:
-            train_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Images"
-            train_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_FLAIR"
-            train_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_SWI"
-            train_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged"
+            # train_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Images"
+            train_img_path = data_root + "/TBI/Train/Images"
+            # train_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_FLAIR"
+            train_seg_path_FLAIR = data_root + "/TBI/Train/Labels_FLAIR"
+            # train_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_SWI"
+            train_seg_path_SWI = data_root + "/TBI/Train/Labels_SWI"
+            # train_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Train/Labels_Merged"
+            train_seg_path_Merged = data_root + "/TBI/Train/Labels_Merged"
 
-            val_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Images"
-            val_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR"
-            val_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI"
-            val_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged"
+            # val_img_path = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Images"
+            val_img_path = data_root + "/TBI/Test/Images"
+            # val_seg_path_FLAIR = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_FLAIR"
+            val_seg_path_FLAIR = data_root + "/TBI/Test/Labels_FLAIR"
+            # val_seg_path_SWI = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_SWI"
+            val_seg_path_SWI = data_root + "/TBI/Test/Labels_SWI"
+            # val_seg_path_Merged = "/home/sedm6251/projectMaterial/datasets/TBI/Test/Labels_Merged"
+            val_seg_path_Merged = data_root + "/TBI/Test/Labels_Merged"
 
             # ///////////// CHANGE THIS TO CHANGE WHICH SEGMENTATION IS USED //////////////
             
@@ -484,8 +500,10 @@ if __name__ == "__main__":
             img_path = "/data/sedm6251/WMH/Images"
             seg_path = "/data/sedm6251/WMH/Segs"
         else:
-            img_path = "/home/sedm6251/projectMaterial/datasets/WMH/Images"
-            seg_path = "/home/sedm6251/projectMaterial/datasets/WMH/Segs"
+            # img_path = "/home/sedm6251/projectMaterial/datasets/WMH/Images"
+            img_path = data_root + "/WMH/Images"
+            # seg_path = "/home/sedm6251/projectMaterial/datasets/WMH/Segs"
+            seg_path = data_root  + "/WMH/Segs"
 
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
