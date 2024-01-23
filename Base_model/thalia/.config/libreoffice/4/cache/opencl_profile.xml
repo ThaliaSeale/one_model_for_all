@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<profile>
+ <version>LibreOffice v1</version>
+ <device>
+  <type>opencl</type>
+  <name>NVIDIA RTX A5000</name>
+  <driver>510.108.03</driver>
+  <time>10754</time>
+  <errors>false</errors>
+ </device>
+ <device>
+  <type>opencl</type>
+  <name>NVIDIA RTX A5000</name>
+  <driver>510.108.03</driver>
+  <time>10626</time>
+  <errors>false</errors>
+ </device>
+ <device>
+  <type>native</type>
+  <time>2314752</time>
+  <errors>false</errors>
+ </device>
+</profile>

@@ -13,17 +13,22 @@ def extract_features(input_data,layers):
         pretrained_model_features.append(features[layer])
     return pretrained_model_features
 
-cuda_id = "cuda:1" # this needs to be changed when running the model
+cuda_id = "cuda:0" # this needs to be changed when running the model
 device = torch.device(cuda_id)
 torch.cuda.set_device(cuda_id)
     
 # pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
+pretrained_model_path = "Base_model/For_Finetune_WMH.pth"
+# model path without TBI and ISLES
+# pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_Epoch_399.pth"
 print("LOADING PRETRAINED MODEL:", pretrained_model_path)
 
 manual_channel_map = [1,3] # not sure if I did this correctly
+manual_channel_map = [1,2] # not sure if I did this correctly
 # modalities_when_trained =  ['DP', 'DWI', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
 modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+# modalities_when_trained = ['DP', 'FLAIR', 'T1', 'T1c', 'T2']
+
 total_modalities = modalities_when_trained
 
 pretrained_model = theory_UNET(in_channels = len(modalities_when_trained),

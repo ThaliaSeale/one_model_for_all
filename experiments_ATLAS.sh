@@ -11,13 +11,17 @@ run_experiment () {
 
 # run_experiment "ATLAS_pretrained_limited" train_progressive.py ATLAS 0 0 1 "[630]" 
 # run_experiment "ATLAS_pretrained_all" train_progressive.py ATLAS 0 0 0 "[300]" 
-run_experiment "ATLAS_scratch_all" train_progressive.py ATLAS 0 1 0 "[300]" 
-run_experiment "ATLAS_scratch_limited" train_progressive.py ATLAS 0 1 1 "[630]"
+# run_experiment "ATLAS_scratch_all" train_progressive.py ATLAS 0 1 0 "[300]" 
+# run_experiment "ATLAS_scratch_limited" train_progressive.py ATLAS 0 1 1 "[630]"
 
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
 # mkdir results/"ATLAS_naive_pretrained_limited_${current_time}"
-# python train_multiple.py 1 1000 "ATLAS_naive_pretrained_limited_${current_time}" ATLAS 0 1 "[800]" | tee results/"ATLAS_naive_pretrained_limited_${current_time}"/log.txt
+# python train_multiple.py 0 1000 "ATLAS_naive_pretrained_limited_${current_time}" ATLAS 0 1 "[800]" 0 | tee results/"ATLAS_naive_pretrained_limited_${current_time}"/log.txt
+# python train_multiple.py 1 1000 "ATLAS_naive_pretrained_limited_${current_time}" ATLAS 0 1 "[800]" 1 | tee results/"ATLAS_naive_pretrained_limited_${current_time}"/log.txt
 
 # mkdir results/"ATLAS_naive_pretrained_all_${current_time}"
 # python train_multiple.py 1 1000 "ATLAS_naive_pretrained_all_${current_time}" ATLAS 0 0 "[640]" | tee results/"ATLAS_naive_pretrained_all_${current_time}"/log.txt
+
+mkdir results/"ATLAS_progressive_limited_${current_time}"
+python train_progressive.py 1 700 "ATLAS_progressive_limited_${current_time}" ATLAS 0 0 1 "[300,500]" | tee results/"ATLAS_progressive_limited_${current_time}"/log.txt

@@ -18,8 +18,17 @@ run_experiment () {
 
 current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 
-mkdir results/"ISLES_naive_pretrained_limited_${current_time}"
-python train_multiple.py 1 1000 "ISLES_naive_pretrained_limited_${current_time}" ISLES 0 1 "[500,700]" | tee results/"ISLES_naive_pretrained_limited_${current_time}"/log.txt
+# mkdir results/"ISLES_naive_pretrained_limited_${current_time}"
+# python train_multiple.py 1 1000 "ISLES_naive_pretrained_limited_${current_time}" ISLES 0 1 "[500,700]" | tee results/"ISLES_naive_pretrained_limited_${current_time}"/log.txt
 
-mkdir results/"ISLES_naive_pretrained_all_${current_time}"
-python train_multiple.py 1 1000 "ISLES_naive_pretrained_all_${current_time}" ISLES 0 0 "[500,700]" | tee results/"ISLES_naive_pretrained_all_${current_time}"/log.txt
+# mkdir results/"ISLES_naive_pretrained_all_${current_time}"
+# python train_multiple.py 1 1000 "ISLES_naive_pretrained_all_${current_time}" ISLES 0 0 "[500,700]" | tee results/"ISLES_naive_pretrained_all_${current_time}"/log.txt
+
+# mkdir results/"ISLES_progressive_limited_${current_time}"
+# python train_progressive.py 1 700 "ISLES_progressive_limited_${current_time}" ISLES 0 0 1 "[200]" | tee results/"ISLES_progressive_limited_${current_time}"/log.txt
+
+# mkdir results/"ISLES_progressive_limited_${current_time}"
+# python train_progressive.py 1 1200 "ISLES_progressive_limited_${current_time}" ISLES 0 0 1 "[600,900]" | tee results/"ISLES_progressive_limited_${current_time}"/log.txt
+
+mkdir results/"ISLES_progressive_limited_${current_time}"
+python train_progressive.py 0 1200 "ISLES_progressive_limited_${current_time}" ISLES 0 0 1 "[600,900]" | tee results/"ISLES_progressive_limited_${current_time}"/log.txt

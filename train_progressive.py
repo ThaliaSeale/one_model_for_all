@@ -197,7 +197,10 @@ if __name__ == "__main__":
 
     # drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
     # drop_learning_rate_value = 1e-5 # learning rate to drop to
-    drop_learning_rate_value = [0.001, 0.0001]
+    # drop_learning_rate_value = [0.001, 0.0001,0.00001]
+    # drop_learning_rate_value = [0.001,0.0005,0.0001]
+    # drop_learning_rate_value = [0.00001]
+    drop_learning_rate_value = [5e-4, 2.5e-4, 1.25e-4]
 
     legacy_unet = False
 
@@ -331,7 +334,8 @@ if __name__ == "__main__":
             if BRATS_two_channel_seg:
                 seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/two_channel_labels"
             else:
-                seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_merged_labels_inc_edema"
+                # seg_path = "/home/shared_space/data/BRATS_Decathlon_2016_17/BRATS_merged_labels_inc_edema"
+                seg_path = data_root + "/BRATS_Decathlon_2016_17/BRATS_merged_labels_inc_edema"
 
         print(seg_path)
 
@@ -358,7 +362,7 @@ if __name__ == "__main__":
             # img_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/normed_images"
             img_path_ATLAS = data_root + "/ATLAS/normed_images"
             # seg_path_ATLAS = "/home/sedm6251/projectMaterial/skullStripped/ATLAS/ATLAS/trimmed_labels_ints"
-            seg_path_ATLAS = data_rot + "/ATLAS/trimmed_labels_ints"
+            seg_path_ATLAS = data_root + "/ATLAS/trimmed_labels_ints"
         images = sorted(glob(os.path.join(img_path_ATLAS, "*_normed.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path_ATLAS, "*_label_trimmed.nii.gz")))
 
@@ -405,8 +409,8 @@ if __name__ == "__main__":
             img_path = "/data/sedm6251/ISLES/images"
             seg_path = "/data/sedm6251/ISLES/labels"
         else:
-            img_path = data_root + "/ISLES2015/Data/images"
-            seg_path = data_root + "/ISLES2015/Data/labels"
+            img_path = data_root + "/ISLES2015/images"
+            seg_path = data_root + "/ISLES2015/labels"
         images = sorted(glob(os.path.join(img_path, "*.nii.gz")))
         segs = sorted(glob(os.path.join(seg_path, "*.nii.gz")))
 

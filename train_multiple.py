@@ -104,7 +104,7 @@ def map_channels(dataset_channels, total_modalities):
 if __name__ == "__main__":
     monai.config.print_config()
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-    set_determinism(seed=1)
+    set_determinism(seed=sys.argv[8])
     print("determinism seed = 1")
 
     # input arguments
@@ -138,10 +138,12 @@ if __name__ == "__main__":
     lr = 1e-3
 
     # settings for refinement training from a pre-trained model
-    load_pre_trained_model = True 
+    # load_pre_trained_model = True 
+    load_pre_trained_model = False 
 
     if "WMH" in dataset:
-        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
+        # load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
+        load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG/UNET/RAND/UNET_BRATS_ATLAS_MSSEG_RAND_Epoch_399.pth"
     elif "ISLES" in dataset:
         load_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/TRAIN_BRATS_ATLAS_MSSEG_TBI/UNET/UNET_BRATS_ATLAS_MSSEG_TBI_Epoch_199.pth"
     elif "BRATS" in dataset:
@@ -155,9 +157,11 @@ if __name__ == "__main__":
 
     if "WMH" in dataset:
         # channel map for WMH
-        manual_channel_map = [1,3]
+        # manual_channel_map = [1,3]
+        manual_channel_map = [1,2]
         # modalities when trained for WMH
-        modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+        # modalities_when_trained =  ['DP', 'FLAIR', 'SWI', 'T1', 'T1c', 'T2']
+        modalities_when_trained =  ['DP', 'FLAIR','T1', 'T1c', 'T2']
     elif "ISLES" in dataset:
         # channel map for ISLES
         manual_channel_map = [1,3,5,2] # not sure if I did this correctly
