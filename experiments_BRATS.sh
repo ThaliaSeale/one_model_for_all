@@ -35,4 +35,4 @@ current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 # python train_multiple.py 1 700 "BRATS_ATLAS_etc_naive_pretrained_all_${current_time}" BRATS_ATLAS_MSSEG_TBI_WMH 0 0 "[500]" 4 | tee results/"BRATS_ATLAS_etc_naive_pretrained_all_${current_time}"/log.txt
 
 mkdir results/"BRATS_progressive_limited_${current_time}"
-python train_progressive.py 0 700 "BRATS_progressive_limited_${current_time}" BRATS 0 0 1 "[200,500]" | tee results/"BRATS_progressive_limited_${current_time}"/log.txt
+python train_progressive.py 0 700 "BRATS_progressive_limited_${current_time}" BRATS 0 0 1 "[600]" | tee results/"BRATS_progressive_limited_${current_time}"/log.txt

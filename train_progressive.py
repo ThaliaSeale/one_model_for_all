@@ -197,10 +197,11 @@ if __name__ == "__main__":
 
     # drop_learning_rate_epoch = 150 # epoch at which to decrease the learning rate
     # drop_learning_rate_value = 1e-5 # learning rate to drop to
-    # drop_learning_rate_value = [0.001, 0.0001,0.00001]
-    # drop_learning_rate_value = [0.001,0.0005,0.0001]
+    # drop_learning_rate_value = [0.001, 0.0001,0.00001,0.000005 ]
+    # drop_learning_rate_value = [0.0005,0.0001]
     # drop_learning_rate_value = [0.00001]
-    drop_learning_rate_value = [5e-4, 2.5e-4, 1.25e-4]
+    # drop_learning_rate_value = [5e-4, 2.5e-4, 1.25e-4] # WMH
+    drop_learning_rate_value = [0.00001, 0.000005, 0.000001,0.0000005] # ISLES
 
     legacy_unet = False
 

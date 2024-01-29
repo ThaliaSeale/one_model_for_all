@@ -14,12 +14,13 @@ def extract_features(input_data,layers):
     return pretrained_model_features
 
 # cuda_id = "cuda:0" # this needs to be changed when running the model
-cuda_id = "cuda:0" # this needs to be changed when running the model
+cuda_id = "cuda:1" # this needs to be changed when running the model
 device = torch.device(cuda_id)
 torch.cuda.set_device(cuda_id)
     
 # pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_ATLAS.pth"
+# pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_TBI_WMH_BEST_ATLAS.pth"
+pretrained_model_path = "Base_model/For_Finetune_MSSEG.pth"
 print("LOADING PRETRAINED MODEL:", pretrained_model_path)
 
 manual_channel_map = [0, 2, 3, 4, 1] # not sure if I did this correctly

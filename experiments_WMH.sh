@@ -23,4 +23,4 @@ current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 # python train_multiple.py 1 1000 "WMH_naive_pretrained_all_${current_time}" WMH 0 0 "[900]" | tee results/"WMH_naive_pretrained_all_${current_time}"/log.txt
 
 mkdir results/"WMH_progressive_limited_${current_time}"
-python train_progressive.py 0 700 "WMH_progressive_limited_${current_time}" WMH 0 0 1 "[600]" | tee results/"WMH_progressive_limited_${current_time}"/log.txt
+python train_progressive.py 0 1000 "WMH_progressive_limited_${current_time}" WMH 0 0 1 "[550,650]" | tee results/"WMH_progressive_limited_${current_time}"/log.txt

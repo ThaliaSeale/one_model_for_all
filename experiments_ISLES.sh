@@ -16,7 +16,9 @@ run_experiment () {
 # run_experiment "ISLES_scratch_all" train_progressive.py ISLES 0 1 0 "[400,700,900]" 
 # run_experiment "ISLES_scratch_limited" train_progressive.py ISLES 0 1 1 "[500,700]"
 
-current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+# current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+# mkdir results/"ISLES_progressive_limited_${current_time}"
+# python train_progressive.py 1 700 "ISLES_progressive_limited_${current_time}" ISLES 0 0 1 "[100, 200]" | tee results/"ISLES_progressive_limited_${current_time}"/log.txt
 
 # mkdir results/"ISLES_naive_pretrained_limited_${current_time}"
 # python train_multiple.py 1 1000 "ISLES_naive_pretrained_limited_${current_time}" ISLES 0 1 "[500,700]" | tee results/"ISLES_naive_pretrained_limited_${current_time}"/log.txt
@@ -30,5 +32,13 @@ current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 # mkdir results/"ISLES_progressive_limited_${current_time}"
 # python train_progressive.py 1 1200 "ISLES_progressive_limited_${current_time}" ISLES 0 0 1 "[600,900]" | tee results/"ISLES_progressive_limited_${current_time}"/log.txt
 
-mkdir results/"ISLES_progressive_limited_${current_time}"
-python train_progressive.py 0 1200 "ISLES_progressive_limited_${current_time}" ISLES 0 0 1 "[600,900]" | tee results/"ISLES_progressive_limited_${current_time}"/log.txt
+# mkdir results/"ISLES_progressive_limited_${current_time}"
+# python train_progressive.py 0 1200 "ISLES_progressive_limited_${current_time}" ISLES 0 0 1 "[600,900]" | tee results/"ISLES_progressive_limited_${current_time}"/log.txt
+
+# current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+# mkdir results/"ISLES_progressive_all_${current_time}"
+# python train_progressive.py 1 700 "ISLES_progressive_all_${current_time}" ISLES 0 0 0 "[100, 200]" | tee results/"ISLES_progressive_all_${current_time}"/log.txt
+
+current_time=$(date "+%Y.%m.%d-%H.%M.%S")
+mkdir results/"ISLES_progressive_all_${current_time}"
+python train_progressive.py 1 700 "ISLES_progressive_all_${current_time}" ISLES 0 0 0 "[700]" | tee results/"ISLES_progressive_all_${current_time}"/log.txt

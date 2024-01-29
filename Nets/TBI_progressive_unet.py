@@ -19,7 +19,8 @@ device = torch.device(cuda_id)
 torch.cuda.set_device(cuda_id)
     
 # pretrained_model_path = "results/23_06__14_26_exc_WMH/models/23_06__14_26_exc_WMH23_06__14_26_exc_WMH_Epoch_549.pth" 
-pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_MSSEG_WMH_BEST_MSSEG.pth"
+# pretrained_model_path = "/home/sedm6251/projectMaterial/baseline_models/Combined_Training/from_cluster/UNET_BRATS_ATLAS_MSSEG_WMH_BEST_MSSEG.pth"
+pretrained_model_path = "Base_model/For_Finetune_TBI.pth"
 
 print("LOADING PRETRAINED MODEL:", pretrained_model_path)
 

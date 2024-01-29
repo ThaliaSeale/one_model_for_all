@@ -24,4 +24,4 @@ current_time=$(date "+%Y.%m.%d-%H.%M.%S")
 # python train_multiple.py 1 1000 "ATLAS_naive_pretrained_all_${current_time}" ATLAS 0 0 "[640]" | tee results/"ATLAS_naive_pretrained_all_${current_time}"/log.txt
 
 mkdir results/"ATLAS_progressive_limited_${current_time}"
-python train_progressive.py 1 700 "ATLAS_progressive_limited_${current_time}" ATLAS 0 0 1 "[300,500]" | tee results/"ATLAS_progressive_limited_${current_time}"/log.txt
+python train_progressive.py 1 700 "ATLAS_progressive_limited_${current_time}" ATLAS 0 0 1 "[600]" | tee results/"ATLAS_progressive_limited_${current_time}"/log.txt
